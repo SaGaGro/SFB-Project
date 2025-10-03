@@ -1,0 +1,5 @@
+*.dblwr
+mysql_data/
+ib_redo*
+ib_logfile*
+*.ibd
