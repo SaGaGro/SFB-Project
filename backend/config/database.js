@@ -3,48 +3,42 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Create connection pool
+// สร้าง connection pool
 const pool = mysql.createPool({
-  host: process.env.DB_HOST || 'localhost',
-  port: process.env.DB_PORT || 3306,
-  user: process.env.DB_USER || 'myuser',
-  password: process.env.DB_PASSWORD || 'mypass',
-  database: process.env.DB_NAME || 'sport_booking_system',
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
   waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
+  connectionLimit: 10
 });
 
-// Test connection
+// ทดสอบการเชื่อมต่อ
 const testConnection = async () => {
   try {
     const connection = await pool.getConnection();
-    console.log('✅ Database connected successfully');
-    console.log(`📊 Connected to: ${process.env.DB_NAME || 'sport_booking_system'}`);
+    console.log('✅ เชื่อมต่อฐานข้อมูลสำเร็จ');
     connection.release();
-    return true;
   } catch (error) {
-    console.error('❌ Database connection failed:', error.message);
-    process.exit(1); // ออกจากโปรแกรมถ้าเชื่อมต่อไม่ได้
+    console.error('❌ เชื่อมต่อฐานข้อมูลไม่สำเร็จ:', error.message);
+    process.exit(1);
   }
 };
 
-// Execute query helper
+// Query แบบง่าย
 const query = async (sql, params = []) => {
   try {
     const [results] = await pool.execute(sql, params);
     return results;
-  } catch (error) {
-    console.error('❌ Database query failed:', {
-      sql,
-      params,
-      message: error.message
-    });
-    throw error; // ให้ caller handle ต่อ
+  } catch (err) {
+    console.error('Query Error:', err.message);
+    throw err;
   }
 };
 
-// Transaction helper
+
+// Transaction helper - สำหรับทำงานหลายอย่างพร้อมกัน
 const transaction = async (callback) => {
   const connection = await pool.getConnection();
   await connection.beginTransaction();
@@ -61,5 +55,5 @@ const transaction = async (callback) => {
   }
 };
 
-export { pool, testConnection, query, transaction };
+export { testConnection, query, transaction };
 export default pool;
