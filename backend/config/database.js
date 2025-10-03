@@ -31,8 +31,17 @@ const testConnection = async () => {
 
 // Execute query helper
 const query = async (sql, params = []) => {
-  const [results] = await pool.execute(sql, params);
-  return results;
+  try {
+    const [results] = await pool.execute(sql, params);
+    return results;
+  } catch (error) {
+    console.error('❌ Database query failed:', {
+      sql,
+      params,
+      message: error.message
+    });
+    throw error; // ให้ caller handle ต่อ
+  }
 };
 
 // Transaction helper
