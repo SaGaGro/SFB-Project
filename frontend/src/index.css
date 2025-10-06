@@ -1,1 +1,139 @@
 @import "tailwindcss";
+
+@layer utilities {
+  .animate-fade-in {
+    animation: fadeIn 0.6s ease-in;
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Gradient backgrounds */
+  .bg-gradient-green {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  }
+
+  .bg-gradient-emerald {
+    background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+  }
+}
+
+/* Custom scrollbar - Green theme */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f0fdf4;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #10b981 0%, #059669 100%);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #059669 0%, #047857 100%);
+}
+
+/* Ant Design customization for green theme */
+.ant-btn-primary {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border: none;
+}
+
+.ant-btn-primary:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.ant-input:focus,
+.ant-input-focused {
+  border-color: #10b981;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.1);
+}
+
+.ant-select:not(.ant-select-disabled):hover .ant-select-selector {
+  border-color: #10b981;
+}
+
+.ant-select-focused:not(.ant-select-disabled).ant-select:not(.ant-select-customize-input) .ant-select-selector {
+  border-color: #10b981;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.1);
+}
+
+/* Card hover effects */
+.ant-card-hoverable:hover {
+  box-shadow: 0 20px 40px rgba(16, 185, 129, 0.15);
+}
+
+/* Tags */
+.ant-tag-green {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  color: #047857;
+  border: 1px solid #6ee7b7;
+}
+
+/* Rate stars */
+.ant-rate-star-full svg {
+  color: #fbbf24;
+}
+
+/* Carousel dots */
+.ant-carousel .slick-dots li button {
+  background: #10b981;
+}
+
+.ant-carousel .slick-dots li.slick-active button {
+  background: #047857;
+}
+
+/* Empty state */
+.ant-empty-description {
+  color: #6b7280;
+}
+
+/* Loading spinner */
+.ant-spin-dot-item {
+  background-color: #10b981;
+}
+
+/* Modal */
+.ant-modal-content {
+  border-radius: 16px;
+}
+
+/* Descriptions */
+.ant-descriptions-bordered .ant-descriptions-item-label {
+  background-color: #f0fdf4;
+}
+
+/* Search input focus */
+.search-green .ant-input-affix-wrapper:focus,
+.search-green .ant-input-affix-wrapper-focused {
+  border-color: #10b981;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.1);
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glass morphism effect */
+.glass-effect {
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
