@@ -168,6 +168,48 @@ export const checkAvailability = async (req, res) => {
   }
 };
 
+// ดึงช่วงเวลาที่ถูกจองแล้ว
+export const getBookedSlotsByDate = async (req, res) => {
+  try {
+    const { courtId, date } = req.query;
+    
+    if (!courtId || !date) {
+      return res.status(400).json({
+        success: false,
+        message: 'กรุณาระบุ court_id และ date'
+      });
+    }
+    
+    // ดึงการจองที่มีสถานะ paid, confirmed, pending
+    const bookings = await query(`
+      SELECT 
+        booking_id,
+        TIME_FORMAT(start_time, '%H:%i') as start_time,
+        TIME_FORMAT(end_time, '%H:%i') as end_time,
+        status
+      FROM bookings
+      WHERE court_id = ?
+        AND booking_date = ?
+        AND status IN ('paid', 'confirmed', 'pending')
+      ORDER BY start_time
+    `, [courtId, date]);
+    
+    console.log('📅 Date:', date);
+    console.log('🕒 Booked slots:', bookings);
+    
+    res.json({
+      success: true,
+      data: bookings
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'เกิดข้อผิดพลาดในการดึงข้อมูล',
+      error: error.message
+    });
+  }
+};
+
 // สร้างการจองใหม่
 export const createBooking = async (req, res) => {
   try {
@@ -181,6 +223,15 @@ export const createBooking = async (req, res) => {
     } = req.body;
     
     const user_id = req.user.user_id;
+    
+    console.log('📝 Creating booking:', {
+      venue_id,
+      court_id,
+      booking_date,
+      start_time,
+      end_time,
+      user_id
+    });
     
     if (!venue_id || !court_id || !booking_date || !start_time || !end_time) {
       return res.status(400).json({
@@ -202,6 +253,8 @@ export const createBooking = async (req, res) => {
         )
     `, [court_id, booking_date, end_time, start_time, end_time, end_time, start_time, end_time]);
     
+    console.log('🔍 Conflict check:', conflictBookings.length, 'conflicts found');
+    
     if (conflictBookings.length > 0) {
       return res.status(400).json({
         success: false,
@@ -221,11 +274,13 @@ export const createBooking = async (req, res) => {
       }
       
       // คำนวณจำนวนชั่วโมง
-      const startHour = parseInt(start_time.split(':')[0]);
-      const endHour = parseInt(end_time.split(':')[0]);
-      const hours = endHour - startHour;
+      const [startHour, startMin] = start_time.split(':').map(Number);
+      const [endHour, endMin] = end_time.split(':').map(Number);
+      const hours = (endHour * 60 + endMin - startHour * 60 - startMin) / 60;
       
       let total_price = courts[0].hourly_rate * hours;
+      
+      console.log('💰 Calculated:', { hours, hourly_rate: courts[0].hourly_rate, total_price });
       
       // สร้างการจอง
       const [bookingResult] = await conn.execute(`
@@ -235,6 +290,8 @@ export const createBooking = async (req, res) => {
       `, [user_id, venue_id, court_id, booking_date, start_time, end_time, total_price]);
       
       const bookingId = bookingResult.insertId;
+      
+      console.log('✅ Booking created:', bookingId);
       
       // เพิ่มอุปกรณ์ (ถ้ามี)
       if (equipment.length > 0) {
@@ -303,6 +360,7 @@ export const createBooking = async (req, res) => {
       }
     });
   } catch (error) {
+    console.error('❌ Booking error:', error);
     res.status(500).json({
       success: false,
       message: error.message || 'เกิดข้อผิดพลาดในการจอง',

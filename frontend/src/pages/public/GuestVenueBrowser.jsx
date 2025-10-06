@@ -9,7 +9,7 @@ import {
   CheckCircleOutlined,
   LockOutlined,
   UserOutlined,
-  ArrowLeftOutlined
+  ArrowLeftOutlined,
 } from '@ant-design/icons';
 import Navbar from '../../components/common/Navbar';
 import api from '../../../services/api';
