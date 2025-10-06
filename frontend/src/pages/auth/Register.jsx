@@ -163,7 +163,7 @@ const Register = () => {
           </Card>
 
           {/* Quick Links */}
-          <div className="mt-6 text-center">
+          {/* <div className="mt-6 text-center">
             <p className="text-gray-600 mb-3">หรือเข้าชมเว็บไซต์ได้เลย</p>
             <div className="flex gap-3 justify-center">
               <Link to="/">
@@ -177,7 +177,7 @@ const Register = () => {
                 </Button>
               </Link>
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
 

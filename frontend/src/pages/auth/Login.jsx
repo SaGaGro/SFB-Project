@@ -15,15 +15,21 @@ const Login = () => {
 
   useEffect(() => {
     if (isAuthenticated && user) {
+      console.log('✅ User authenticated:', user);
+      console.log('🔄 Redirecting based on role:', user.role);
+      
       // ถ้ามี from ให้ไปหน้าที่ต้องการ
       if (from) {
+        console.log('🎯 Redirecting to from:', from);
         navigate(from, { replace: true });
       } else {
         // ถ้าไม่มี ให้ไปตาม role
         if (user.role === 'member') {
-          navigate('/member/venues');
-        } else {
-          navigate('/admin/dashboard');
+          console.log('🎯 Redirecting to member venues');
+          navigate('/member/venues', { replace: true });
+        } else if (user.role === 'admin' || user.role === 'manager') {
+          console.log('🎯 Redirecting to admin dashboard');
+          navigate('/admin/dashboard', { replace: true });
         }
       }
     }
@@ -35,9 +41,19 @@ const Login = () => {
 
   const onFinish = async (values) => {
     try {
-      await login(values.email, values.password);
+      const response = await login(values.email, values.password);
+      console.log('✅ Login response:', response);
       message.success('เข้าสู่ระบบสำเร็จ');
+      
+      // Force redirect หลัง login สำเร็จ
+      const userData = response.data.user;
+      if (userData.role === 'member') {
+        navigate('/member/venues', { replace: true });
+      } else if (userData.role === 'admin' || userData.role === 'manager') {
+        navigate('/admin/dashboard', { replace: true });
+      }
     } catch (err) {
+      console.error('❌ Login error:', err);
       message.error(err.message || 'เข้าสู่ระบบไม่สำเร็จ');
     }
   };
@@ -135,7 +151,7 @@ const Login = () => {
             </Form>
           </Card>
 
-          <div className="mt-6 text-center">
+          {/* <div className="mt-6 text-center">
             <p className="text-gray-600 mb-3">หรือเข้าชมเว็บไซต์ได้เลย</p>
             <div className="flex gap-3 justify-center">
               <Link to="/">
@@ -149,7 +165,7 @@ const Login = () => {
                 </Button>
               </Link>
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
 

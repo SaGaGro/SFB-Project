@@ -27,10 +27,11 @@ const VenueList = () => {
   const fetchVenues = async () => {
     try {
       const response = await api.get('/venues?active=true');
+      console.log('✅ Venues loaded:', response.data);
       setVenues(response.data || []);
       setFilteredVenues(response.data || []);
     } catch (error) {
-      console.error('Error fetching venues:', error);
+      console.error('❌ Error fetching venues:', error);
     } finally {
       setLoading(false);
     }
@@ -170,10 +171,7 @@ const VenueList = () => {
             <Row gutter={[24, 24]}>
               {filteredVenues.map((venue) => (
                 <Col xs={24} sm={12} lg={8} xl={6} key={venue.venue_id}>
-                  <VenueCard 
-                    venue={venue} 
-                    onClick={() => navigate(`/member/venues/${venue.venue_id}`)} 
-                  />
+                  <VenueCard venue={venue} />
                 </Col>
               ))}
             </Row>

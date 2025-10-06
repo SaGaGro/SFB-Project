@@ -5,7 +5,10 @@ import {
   LogoutOutlined, 
   CalendarOutlined,
   SettingOutlined,
-  DashboardOutlined 
+  DashboardOutlined,
+  HomeOutlined,
+  EnvironmentOutlined,
+  ShopOutlined
 } from '@ant-design/icons';
 import useAuthStore from '../../stores/authStore';
 
@@ -22,21 +25,21 @@ const Navbar = () => {
   const getMemberMenuItems = () => [
     {
       key: 'venues',
-      icon: <CalendarOutlined />,
+      icon: <ShopOutlined />,
       label: 'เลือกสนาม',
-      onClick: () => navigate('/venues'),
+      onClick: () => navigate('/member/venues'),
     },
     {
       key: 'bookings',
       icon: <CalendarOutlined />,
       label: 'การจองของฉัน',
-      onClick: () => navigate('/my-bookings'),
+      onClick: () => navigate('/member/my-bookings'),
     },
     {
       key: 'profile',
       icon: <UserOutlined />,
       label: 'โปรไฟล์',
-      onClick: () => navigate('/profile'),
+      onClick: () => navigate('/member/profile'),
     },
     {
       type: 'divider',
@@ -79,7 +82,6 @@ const Navbar = () => {
     ? getMemberMenuItems() 
     : getAdminMenuItems();
 
-  // ซ่อนปุ่ม Login/Register เมื่ออยู่ในหน้า Login/Register
   const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
 
   return (
@@ -88,7 +90,7 @@ const Navbar = () => {
         <div className="flex justify-between items-center h-20">
           <Link to="/" className="flex items-center space-x-3 group">
             <div className="bg-white p-2 rounded-xl shadow-md group-hover:shadow-lg transition-shadow">
-              <span className="text-3xl">🏟️</span>
+              <ShopOutlined className="text-3xl text-green-600" />
             </div>
             <div>
               <span className="text-2xl font-bold text-white drop-shadow-md">
@@ -101,33 +103,46 @@ const Navbar = () => {
           <div className="flex items-center space-x-8">
             <Link 
               to="/" 
-              className="text-white hover:text-green-100 transition-colors font-medium hidden sm:block"
+              className="text-white hover:text-green-100 transition-colors font-medium hidden sm:flex items-center gap-2"
             >
+              <HomeOutlined />
               หน้าแรก
             </Link>
 
-            {/* แสดงลิงก์ดูสนามเสมอ */}
-            <Link 
-              to="/venues" 
-              className="text-white hover:text-green-100 transition-colors font-medium hidden sm:block"
-            >
-              ดูสนาม
-            </Link>
+            {isAuthenticated && user?.role === 'member' ? (
+              <Link 
+                to="/member/venues" 
+                className="text-white hover:text-green-100 transition-colors font-medium hidden sm:flex items-center gap-2"
+              >
+                <EnvironmentOutlined />
+                ดูสนาม
+              </Link>
+            ) : !isAuthenticated && (
+              <Link 
+                to="/venues" 
+                className="text-white hover:text-green-100 transition-colors font-medium hidden sm:flex items-center gap-2"
+              >
+                <EnvironmentOutlined />
+                ดูสนาม
+              </Link>
+            )}
             
             {isAuthenticated ? (
               <>
                 {user?.role === 'member' ? (
                   <Link 
-                    to="/my-bookings" 
-                    className="text-white hover:text-green-100 transition-colors font-medium hidden md:block"
+                    to="/member/my-bookings" 
+                    className="text-white hover:text-green-100 transition-colors font-medium hidden md:flex items-center gap-2"
                   >
+                    <CalendarOutlined />
                     การจองของฉัน
                   </Link>
                 ) : (
                   <Link 
                     to="/admin/dashboard" 
-                    className="text-white hover:text-green-100 transition-colors font-medium hidden md:block"
+                    className="text-white hover:text-green-100 transition-colors font-medium hidden md:flex items-center gap-2"
                   >
+                    <DashboardOutlined />
                     จัดการระบบ
                   </Link>
                 )}

@@ -11,6 +11,7 @@ const useAuthStore = create((set) => ({
     set({ loading: true, error: null });
     try {
       const response = await authService.login(email, password);
+      console.log('🔐 Login successful:', response.data.user);
       set({ 
         user: response.data.user, 
         isAuthenticated: true, 
@@ -18,6 +19,7 @@ const useAuthStore = create((set) => ({
       });
       return response;
     } catch (error) {
+      console.error('🔐 Login failed:', error);
       set({ 
         error: error.message || 'เกิดข้อผิดพลาด', 
         loading: false 
@@ -44,6 +46,13 @@ const useAuthStore = create((set) => ({
   logout: () => {
     authService.logout();
     set({ user: null, isAuthenticated: false });
+  },
+
+  updateUser: (userData) => {
+    const currentUser = authService.getCurrentUser();
+    const updatedUser = { ...currentUser, ...userData };
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+    set({ user: updatedUser });
   },
 
   clearError: () => set({ error: null }),

@@ -6,7 +6,13 @@ import {
   TrophyOutlined,
   SafetyOutlined,
   ClockCircleOutlined,
-  EnvironmentOutlined
+  EnvironmentOutlined,
+  ShopOutlined,
+  HomeOutlined,
+  CalendarOutlined,
+  UserOutlined,
+  MailOutlined,
+  PhoneOutlined
 } from '@ant-design/icons';
 import Navbar from '../../components/common/Navbar';
 
@@ -52,25 +58,25 @@ const Home = () => {
 
   const sportTypes = [
     {
-      icon: '🏸',
+      icon: <TrophyOutlined className="text-7xl" />,
       name: 'แบดมินตัน',
       description: 'สนามมาตรฐาน พื้นไม้คุณภาพ',
       color: 'from-orange-400 to-amber-500'
     },
     {
-      icon: '⚽',
+      icon: <TrophyOutlined className="text-7xl" />,
       name: 'ฟุตซอล',
       description: 'พื้นหญ้าเทียม เกรดพรีเมียม',
       color: 'from-green-400 to-emerald-500'
     },
     {
-      icon: '🏀',
+      icon: <TrophyOutlined className="text-7xl" />,
       name: 'บาสเกตบอล',
       description: 'สนามกลางแจ้ง และในร่ม',
       color: 'from-red-400 to-orange-500'
     },
     {
-      icon: '🎾',
+      icon: <TrophyOutlined className="text-7xl" />,
       name: 'กีฬาอื่นๆ',
       description: 'เทนนิส วอลเลย์บอล',
       color: 'from-blue-400 to-cyan-500'
@@ -83,7 +89,6 @@ const Home = () => {
       
       {/* Hero Section */}
       <div className="relative bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 text-white overflow-hidden">
-        {/* Decorative Elements */}
         <div className="absolute inset-0 bg-black opacity-10"></div>
         <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full opacity-10 -mr-48 -mt-48 blur-3xl"></div>
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-white rounded-full opacity-10 -ml-48 -mb-48 blur-3xl"></div>
@@ -92,8 +97,9 @@ const Home = () => {
         <div className="container mx-auto px-4 py-24 relative z-10">
           <div className="max-w-4xl mx-auto text-center">
             <div className="mb-6 animate-fade-in">
-              <span className="inline-block bg-white bg-opacity-20 backdrop-blur-sm px-6 py-2 rounded-full text-sm font-semibold mb-4 border border-white border-opacity-30">
-                🏆 ระบบจองคอร์ทออนไลน์ที่ดีที่สุด
+              <span className="inline-block bg-teal-600 bg-opacity-20 backdrop-blur-sm px-6 py-2 rounded-full text-sm font-semibold mb-4 border border-teal border-opacity-30">
+                <TrophyOutlined className="mr-2" />
+                ระบบจองคอร์ทออนไลน์ที่ดีที่สุด
               </span>
             </div>
             
@@ -103,8 +109,22 @@ const Home = () => {
             <p className="text-2xl md:text-3xl mb-4 opacity-95 font-light">
               สนามกีฬาคุณภาพ หลายสาขาทั่วกรุงเทพ
             </p>
-            <p className="text-lg md:text-xl mb-10 opacity-90">
-              🏸 แบดมินตัน | ⚽ ฟุตซอล | 🏀 บาสเกตบอล | 🎾 และอื่นๆ
+            <p className="text-lg md:text-xl mb-10 opacity-90 flex items-center justify-center gap-4 flex-wrap">
+              <span className="flex items-center gap-2">
+                <TrophyOutlined /> แบดมินตัน
+              </span>
+              <span>|</span>
+              <span className="flex items-center gap-2">
+                <TrophyOutlined /> ฟุตซอล
+              </span>
+              <span>|</span>
+              <span className="flex items-center gap-2">
+                <TrophyOutlined /> บาสเกตบอล
+              </span>
+              <span>|</span>
+              <span className="flex items-center gap-2">
+                <TrophyOutlined /> และอื่นๆ
+              </span>
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -112,17 +132,19 @@ const Home = () => {
                 <Button 
                   type="primary" 
                   size="large" 
+                  icon={<EnvironmentOutlined />}
                   className="bg-white text-green-600 hover:bg-green-50 border-0 font-semibold h-14 px-10 rounded-full shadow-2xl hover:shadow-green-200 hover:scale-105 transition-all text-lg"
                 >
-                  🔍 ดูสนามทั้งหมด
+                  ดูสนามทั้งหมด
                 </Button>
               </Link>
               <Link to="/register">
                 <Button 
-                  size="large" 
+                  size="large"
+                  icon={<UserOutlined />}
                   className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-green-600 font-semibold h-14 px-10 rounded-full hover:scale-105 transition-all text-lg"
                 >
-                  ✨ สมัครสมาชิก
+                  สมัครสมาชิก
                 </Button>
               </Link>
             </div>
@@ -182,7 +204,7 @@ const Home = () => {
               >
                 <div className={`bg-gradient-to-br ${sport.color} -mx-6 -mt-6 mb-6 py-8 relative overflow-hidden`}>
                   <div className="absolute inset-0 bg-white opacity-10"></div>
-                  <div className="text-7xl mb-2 relative z-10 drop-shadow-lg">{sport.icon}</div>
+                  <div className="relative z-10 drop-shadow-lg text-white">{sport.icon}</div>
                 </div>
                 <h3 className="text-2xl font-bold mb-3 text-gray-800">
                   {sport.name}
@@ -197,10 +219,11 @@ const Home = () => {
           <Link to="/venues">
             <Button 
               size="large" 
-              type="primary" 
+              type="primary"
+              icon={<CalendarOutlined />}
               className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 border-0 h-14 px-10 rounded-full shadow-lg hover:shadow-xl transition-all font-semibold text-lg"
             >
-              📅 ดูสนามทั้งหมด
+              ดูสนามทั้งหมด
             </Button>
           </Link>
         </div>
@@ -239,78 +262,6 @@ const Home = () => {
         </div>
       </div>
 
-      {/* Testimonials Section */}
-      <div className="container mx-auto px-4 py-16">
-        <div className="text-center mb-12">
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
-            ลูกค้าของเราพูดถึงเรา
-          </h2>
-          <p className="text-gray-600 text-lg">
-            ความพึงพอใจของคุณคือความสำเร็จของเรา
-          </p>
-        </div>
-
-        <Row gutter={[24, 24]}>
-          <Col xs={24} md={8}>
-            <Card className="border-0 shadow-xl rounded-2xl h-full bg-gradient-to-br from-green-50 to-emerald-50">
-              <div className="flex items-center mb-4">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-r from-green-600 to-emerald-600 flex items-center justify-center text-white font-bold text-xl mr-3">
-                  K
-                </div>
-                <div>
-                  <p className="font-bold text-gray-800">คุณกิตติ</p>
-                  <p className="text-sm text-gray-600">นักแบดมินตัน</p>
-                </div>
-              </div>
-              <div className="mb-3">
-                <span className="text-yellow-400">⭐⭐⭐⭐⭐</span>
-              </div>
-              <p className="text-gray-700 italic">
-                "สนามสะอาด อุปกรณ์ครบครัน ระบบจองใช้ง่ายมาก แนะนำเลยครับ"
-              </p>
-            </Card>
-          </Col>
-          <Col xs={24} md={8}>
-            <Card className="border-0 shadow-xl rounded-2xl h-full bg-gradient-to-br from-emerald-50 to-teal-50">
-              <div className="flex items-center mb-4">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 flex items-center justify-center text-white font-bold text-xl mr-3">
-                  S
-                </div>
-                <div>
-                  <p className="font-bold text-gray-800">คุณสมชาย</p>
-                  <p className="text-sm text-gray-600">นักฟุตซอล</p>
-                </div>
-              </div>
-              <div className="mb-3">
-                <span className="text-yellow-400">⭐⭐⭐⭐⭐</span>
-              </div>
-              <p className="text-gray-700 italic">
-                "สนามหญ้าเทียมคุณภาพดี เล่นสนุก บรรยากาศดี ราคาไม่แพง"
-              </p>
-            </Card>
-          </Col>
-          <Col xs={24} md={8}>
-            <Card className="border-0 shadow-xl rounded-2xl h-full bg-gradient-to-br from-teal-50 to-cyan-50">
-              <div className="flex items-center mb-4">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-r from-teal-600 to-cyan-600 flex items-center justify-center text-white font-bold text-xl mr-3">
-                  N
-                </div>
-                <div>
-                  <p className="font-bold text-gray-800">คุณนภา</p>
-                  <p className="text-sm text-gray-600">นักบาสเกตบอล</p>
-                </div>
-              </div>
-              <div className="mb-3">
-                <span className="text-yellow-400">⭐⭐⭐⭐⭐</span>
-              </div>
-              <p className="text-gray-700 italic">
-                "จองง่าย ชำระเงินสะดวก พนักงานบริการดีมาก ประทับใจ"
-              </p>
-            </Card>
-          </Col>
-        </Row>
-      </div>
-
       {/* CTA Section */}
       <div className="relative bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 text-white py-20 overflow-hidden">
         <div className="absolute inset-0 bg-black opacity-10"></div>
@@ -321,7 +272,7 @@ const Home = () => {
           <div className="max-w-3xl mx-auto">
             <h2 className="text-4xl md:text-5xl font-bold mb-6 drop-shadow-lg">
               พร้อมจองแล้วหรือยัง
-            </h2>
+              </h2>
             <p className="text-xl md:text-2xl mb-8 opacity-95">
               สมัครสมาชิกวันนี้ จองคอร์ทได้ทันที
             </p>
@@ -330,10 +281,11 @@ const Home = () => {
             </p>
             <Link to="/register">
               <Button 
-                size="large" 
+                size="large"
+                icon={<UserOutlined />}
                 className="bg-white text-green-600 hover:bg-green-50 border-0 font-semibold h-14 px-10 rounded-full shadow-2xl hover:scale-105 transition-all text-lg"
               >
-                🚀 สมัครสมาชิกเลย
+                สมัครสมาชิกเลย
               </Button>
             </Link>
           </div>
@@ -347,7 +299,7 @@ const Home = () => {
             <Col xs={24} md={8}>
               <div className="flex items-center space-x-3 mb-4">
                 <div className="bg-gradient-to-r from-green-600 to-emerald-600 p-2 rounded-xl">
-                  <span className="text-3xl">🏟️</span>
+                  <ShopOutlined className="text-3xl text-white" />
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-white">SPORT BOOKING</h3>
@@ -369,9 +321,15 @@ const Home = () => {
             <Col xs={24} md={8}>
               <h4 className="text-lg font-bold text-white mb-4">ติดต่อเรา</h4>
               <ul className="space-y-2 text-gray-400">
-                <li>📧 info@sportbooking.com</li>
-                <li>📱 02-XXX-XXXX</li>
-                <li>📍 กรุงเทพมหานคร ประเทศไทย</li>
+                <li className="flex items-center gap-2">
+                  <MailOutlined /> info@sportbooking.com
+                </li>
+                <li className="flex items-center gap-2">
+                  <PhoneOutlined /> 02-XXX-XXXX
+                </li>
+                <li className="flex items-center gap-2">
+                  <EnvironmentOutlined /> กรุงเทพมหานคร ประเทศไทย
+                </li>
               </ul>
             </Col>
           </Row>

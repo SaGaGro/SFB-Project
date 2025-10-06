@@ -68,7 +68,7 @@ const BookingForm = () => {
       setEquipment(equipmentRes.data || []);
     } catch (error) {
       message.error('ไม่สามารถโหลดข้อมูลได้');
-      navigate('/venues');
+      navigate(`/member/venues/${venueId}`);
     } finally {
       setLoading(false);
     }
@@ -181,13 +181,18 @@ const BookingForm = () => {
       Modal.success({
         title: 'จองสำเร็จ',
         content: `รหัสการจอง: ${response.data.bookingId}`,
-        onOk: () => navigate('/my-bookings')
+        onOk: () => navigate('/member/my-bookings')
       });
     } catch (error) {
       message.error(error.message || 'เกิดข้อผิดพลาดในการจอง');
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleBack = () => {
+    // ใช้ navigate(-1) เพื่อย้อนกลับไปหน้าก่อนหน้า
+    navigate(-1);
   };
 
   if (loading) {
@@ -221,7 +226,7 @@ const BookingForm = () => {
     <div className="space-y-6">
       <Button
         icon={<ArrowLeftOutlined />}
-        onClick={() => navigate(`/venues/${venueId}`)}
+        onClick={handleBack}
         size="large"
       >
         กลับ

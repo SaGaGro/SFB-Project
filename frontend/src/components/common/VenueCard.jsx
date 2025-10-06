@@ -34,12 +34,17 @@ const VenueCard = ({ venue }) => {
 
   const config = venueTypeConfig[venue.venue_type] || venueTypeConfig.other;
 
+  const handleViewDetails = (e) => {
+    e.stopPropagation();
+    console.log('Navigating to:', `/member/venues/${venue.venue_id}`);
+    navigate(`/member/venues/${venue.venue_id}`);
+  };
+
   return (
     <Card
       hoverable
       className="rounded-2xl overflow-hidden border-0 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2"
       bodyStyle={{ padding: 0 }}
-      onClick={() => navigate(`/venues/${venue.venue_id}`)}
     >
       {/* Image Section */}
       <div className="relative overflow-hidden">
@@ -113,6 +118,7 @@ const VenueCard = ({ venue }) => {
             type="primary" 
             block
             size="large"
+            onClick={handleViewDetails}
             className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 border-0 font-semibold rounded-xl h-12 shadow-md hover:shadow-lg transition-all"
           >
             ดูรายละเอียดและจอง
