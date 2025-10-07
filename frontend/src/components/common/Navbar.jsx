@@ -1,16 +1,16 @@
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Button, Dropdown, Avatar } from 'antd';
-import { 
-  UserOutlined, 
-  LogoutOutlined, 
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Button, Dropdown, Avatar } from "antd";
+import {
+  UserOutlined,
+  LogoutOutlined,
   CalendarOutlined,
   SettingOutlined,
   DashboardOutlined,
   HomeOutlined,
   EnvironmentOutlined,
-  ShopOutlined
-} from '@ant-design/icons';
-import useAuthStore from '../../stores/authStore';
+  ShopOutlined,
+} from "@ant-design/icons";
+import useAuthStore from "../../stores/authStore";
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -19,43 +19,44 @@ const Navbar = () => {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate("/login");
   };
 
   // กำหนด path สำหรับ Logo ตาม role
   const getLogoPath = () => {
-    if (!isAuthenticated) return '/';
-    if (user?.role === 'member') return '/member/venues';
-    if (user?.role === 'admin' || user?.role === 'manager') return '/admin/dashboard';
-    return '/';
+    if (!isAuthenticated) return "/";
+    if (user?.role === "member") return "/member/venues";
+    if (user?.role === "admin" || user?.role === "manager")
+      return "/admin/dashboard";
+    return "/";
   };
 
   const getMemberMenuItems = () => [
     {
-      key: 'venues',
+      key: "venues",
       icon: <ShopOutlined />,
-      label: 'เลือกสนาม',
-      onClick: () => navigate('/member/venues'),
+      label: "เลือกสนาม",
+      onClick: () => navigate("/member/venues"),
     },
     {
-      key: 'bookings',
+      key: "bookings",
       icon: <CalendarOutlined />,
-      label: 'การจองของฉัน',
-      onClick: () => navigate('/member/my-bookings'),
+      label: "การจองของฉัน",
+      onClick: () => navigate("/member/my-bookings"),
     },
     {
-      key: 'profile',
+      key: "profile",
       icon: <UserOutlined />,
-      label: 'โปรไฟล์',
-      onClick: () => navigate('/member/profile'),
+      label: "โปรไฟล์",
+      onClick: () => navigate("/member/profile"),
     },
     {
-      type: 'divider',
+      type: "divider",
     },
     {
-      key: 'logout',
+      key: "logout",
       icon: <LogoutOutlined />,
-      label: 'ออกจากระบบ',
+      label: "ออกจากระบบ",
       onClick: handleLogout,
       danger: true,
     },
@@ -63,41 +64,44 @@ const Navbar = () => {
 
   const getAdminMenuItems = () => [
     {
-      key: 'dashboard',
+      key: "dashboard",
       icon: <DashboardOutlined />,
-      label: 'Dashboard',
-      onClick: () => navigate('/admin/dashboard'),
+      label: "Dashboard",
+      onClick: () => navigate("/admin/dashboard"),
     },
     {
-      key: 'settings',
+      key: "settings",
       icon: <SettingOutlined />,
-      label: 'จัดการระบบ',
-      onClick: () => navigate('/admin/venues'),
+      label: "จัดการระบบ",
+      onClick: () => navigate("/admin/venues"),
     },
     {
-      type: 'divider',
+      type: "divider",
     },
     {
-      key: 'logout',
+      key: "logout",
       icon: <LogoutOutlined />,
-      label: 'ออกจากระบบ',
+      label: "ออกจากระบบ",
       onClick: handleLogout,
       danger: true,
     },
   ];
 
-  const userMenuItems = user?.role === 'member' 
-    ? getMemberMenuItems() 
-    : getAdminMenuItems();
+  const userMenuItems =
+    user?.role === "member" ? getMemberMenuItems() : getAdminMenuItems();
 
-  const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
+  const isAuthPage =
+    location.pathname === "/login" || location.pathname === "/register";
 
   return (
     <nav className="bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 shadow-lg sticky top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-20">
           {/* Logo - Redirect ตาม role */}
-          <Link to={getLogoPath()} className="flex items-center space-x-3 group">
+          <Link
+            to={getLogoPath()}
+            className="flex items-center space-x-3 group"
+          >
             <div className="bg-white p-2 rounded-xl shadow-md group-hover:shadow-lg transition-shadow">
               <ShopOutlined className="text-3xl text-green-600" />
             </div>
@@ -112,8 +116,8 @@ const Navbar = () => {
           <div className="flex items-center space-x-8">
             {/* แสดงลิงก์หน้าแรกเฉพาะตอนยังไม่ Login */}
             {!isAuthenticated && (
-              <Link 
-                to="/" 
+              <Link
+                to="/"
                 className="text-white hover:text-green-100 transition-colors font-medium hidden sm:flex items-center gap-2"
               >
                 <HomeOutlined />
@@ -122,58 +126,68 @@ const Navbar = () => {
             )}
 
             {/* ลิงก์ดูสนาม */}
-            {isAuthenticated && user?.role === 'member' ? (
-              <Link 
-                to="/member/venues" 
-                className="text-white hover:text-green-100 transition-colors font-medium hidden sm:flex items-center gap-2"
+            {isAuthenticated && user?.role === "member" ? (
+              <Link
+                to="/member/venues"
+                className=" !text-white hover:!text-black transition-colors font-medium hidden sm:flex items-center gap-2"
               >
-                <EnvironmentOutlined />
+                <EnvironmentOutlined className="!text-white" />
                 ดูสนาม
               </Link>
-            ) : !isAuthenticated && (
-              <Link 
-                to="/venues" 
-                className="text-white hover:text-green-100 transition-colors font-medium hidden sm:flex items-center gap-2"
-              >
-                <EnvironmentOutlined />
-                ดูสนาม
-              </Link>
+            ) : (
+              !isAuthenticated && (
+                <Link
+                  to="/venues"
+                  className="text-white hover:text-green-100 transition-colors font-medium hidden sm:flex items-center gap-2"
+                >
+                  <EnvironmentOutlined />
+                  ดูสนาม
+                </Link>
+              )
             )}
-            
+
             {isAuthenticated ? (
               <>
-                {user?.role === 'member' ? (
-                  <Link 
-                    to="/member/my-bookings" 
-                    className="text-white hover:text-green-100 transition-colors font-medium hidden md:flex items-center gap-2"
+                {user?.role === "member" ? (
+                  <Link
+                    to="/member/my-bookings"
+                    className="!text-white hover:text-green-100 transition-colors font-medium hidden md:flex items-center gap-2"
                   >
                     <CalendarOutlined />
                     การจองของฉัน
                   </Link>
                 ) : (
-                  <Link 
-                    to="/admin/dashboard" 
+                  <Link
+                    to="/admin/dashboard"
                     className="text-white hover:text-green-100 transition-colors font-medium hidden md:flex items-center gap-2"
                   >
                     <DashboardOutlined />
                     จัดการระบบ
                   </Link>
                 )}
-                
-                <Dropdown 
-                  menu={{ items: userMenuItems }} 
+
+                <Dropdown
+                  menu={{ items: userMenuItems }}
                   placement="bottomRight"
                 >
                   <div className="flex items-center space-x-3 cursor-pointer bg-white bg-opacity-20 hover:bg-opacity-30 px-4 py-2 rounded-full transition-all">
-                    <Avatar 
-                      icon={<UserOutlined />} 
-                      src={user?.profile_image ? `${import.meta.env.VITE_BASE_URL}${user.profile_image}` : null}
+                    <Avatar
+                      icon={<UserOutlined />}
+                      src={
+                        user?.profile_image
+                          ? `${import.meta.env.VITE_BASE_URL}${
+                              user.profile_image
+                            }`
+                          : null
+                      }
                       className="bg-green-500 border-2 border-white"
                     />
                     <div className="text-left hidden sm:block">
-                      <div className="text-white text-sm font-semibold">{user?.username}</div>
-                      <div className="text-green-100 text-xs">
-                        {user?.role === 'member' ? 'สมาชิก' : 'ผู้จัดการ'}
+                      <div className="text-black text-sm font-semibold">
+                        {user?.username}
+                      </div>
+                      <div className="!text-black-100 text-xs">
+                        {user?.role === "member" ? "สมาชิก" : "ผู้จัดการ"}
                       </div>
                     </div>
                   </div>
@@ -183,7 +197,7 @@ const Navbar = () => {
               !isAuthPage && (
                 <div className="flex items-center space-x-3">
                   <Link to="/login">
-                    <Button 
+                    <Button
                       className="border-2 border-white text-white hover:bg-white hover:text-green-600 font-semibold h-10 px-6 rounded-full"
                       ghost
                     >
@@ -191,9 +205,7 @@ const Navbar = () => {
                     </Button>
                   </Link>
                   <Link to="/register">
-                    <Button 
-                      className="bg-white text-green-600 hover:bg-green-50 border-0 font-semibold h-10 px-6 rounded-full shadow-md hover:shadow-lg transition-all"
-                    >
+                    <Button className="bg-white text-green-600 hover:bg-green-50 border-0 font-semibold h-10 px-6 rounded-full shadow-md hover:shadow-lg transition-all">
                       สมัครสมาชิก
                     </Button>
                   </Link>

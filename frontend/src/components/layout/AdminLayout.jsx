@@ -119,14 +119,14 @@ const AdminLayout = () => {
           </div>
           
           <div className="flex items-center space-x-4">
-            <Link to="/" className="text-gray-600 hover:text-red-600">
+            <Link to="/" className="!text-white hover:text-red-600">
               กลับสู่หน้าแรก
             </Link>
             <div className="flex items-center space-x-2">
-              <UserOutlined className="text-gray-600" />
+              <UserOutlined className="!text-white" />
               <div className="text-left">
-                <div className="text-sm font-semibold">{user?.username}</div>
-                <div className="text-xs text-gray-500">
+                <div className="text-sm font-semibold !text-white">{user?.username}</div>
+                <div className="text-xs !text-white">
                   {user?.role === 'admin' ? 'ผู้ดูแลระบบ' : 'ผู้จัดการ'}
                 </div>
               </div>

@@ -21,6 +21,11 @@
     }
   }
 
+  .ant-avatar {
+  margin: 0 8px 0 0 !important;
+  } 
+
+
   /* Gradient backgrounds */
   .bg-gradient-green {
     background: linear-gradient(135deg, #10b981 0%, #059669 100%);
