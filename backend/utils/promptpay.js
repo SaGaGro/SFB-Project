@@ -23,9 +23,17 @@ export const validatePromptPayPhone = (phoneNumber) => {
 };
 
 export const formatPromptPayPhone = (phoneNumber) => {
+  if (!phoneNumber) {
+    throw new Error('เบอร์โทรไม่ถูกต้อง');
+  }
+
+  // ลบช่องว่างและขีดกลาง
   let formatted = phoneNumber.replace(/[\s-]/g, '');
+
+  // เปลี่ยน +66 เป็น 0
   if (formatted.startsWith('+66')) {
     formatted = '0' + formatted.substring(3);
   }
+
   return formatted;
 };
