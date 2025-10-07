@@ -1,13 +1,11 @@
 import { query, transaction } from '../config/database.js';
 import { logActivity } from '../utils/logger.js';
 
-// สร้างการชำระเงิน
 export const createPayment = async (req, res) => {
   try {
     const { booking_id, method = 'qr', qr_code } = req.body;
     const user_id = req.user.user_id;
     
-    // ตรวจสอบการจอง
     const bookings = await query(
       'SELECT * FROM bookings WHERE booking_id = ? AND user_id = ?',
       [booking_id, user_id]
@@ -36,13 +34,11 @@ export const createPayment = async (req, res) => {
       });
     }
     
-    // สร้างการชำระเงิน
     const result = await query(`
       INSERT INTO payments (booking_id, user_id, amount, method, qr_code, status)
       VALUES (?, ?, ?, ?, ?, 'pending')
     `, [booking_id, user_id, booking.total_price, method, qr_code]);
     
-    // Log activity
     await logActivity(user_id, 'CREATE_PAYMENT', 'payments', result.insertId);
     
     res.status(201).json({
@@ -63,20 +59,17 @@ export const createPayment = async (req, res) => {
   }
 };
 
-// ยืนยันการชำระเงิน (สำหรับ admin/manager)
 export const confirmPayment = async (req, res) => {
   try {
     const { id } = req.params;
     
     await transaction(async (conn) => {
-      // Update payment status
       await conn.execute(`
         UPDATE payments 
         SET status = 'paid', paid_at = NOW()
         WHERE payment_id = ?
       `, [id]);
       
-      // ดึงข้อมูล payment
       const [payments] = await conn.execute(
         'SELECT booking_id, user_id FROM payments WHERE payment_id = ?',
         [id]
@@ -88,31 +81,27 @@ export const confirmPayment = async (req, res) => {
       
       const payment = payments[0];
       
-      // Update booking status
       await conn.execute(
         'UPDATE bookings SET status = "paid" WHERE booking_id = ?',
         [payment.booking_id]
       );
       
-      // Update time slot
       await conn.execute(
         'UPDATE court_time_slots SET status = "booked" WHERE booking_id = ?',
         [payment.booking_id]
       );
       
-      // สร้างการแจ้งเตือน
       await conn.execute(`
         INSERT INTO notifications (user_id, title, message, type)
         VALUES (?, ?, ?, ?)
       `, [
         payment.user_id,
         'ชำระเงินสำเร็จ',
-        `การชำระเงินสำหรับการจอง #${payment.booking_id} สำเร็จแล้ว`,
+        `การชำระเงินสำหรับการจอง #${payment.booking_id} สำเร็จแล้ว คุณสามารถใช้บริการได้ตามวันและเวลาที่จอง`,
         'payment'
       ]);
     });
     
-    // Log activity
     await logActivity(req.user.user_id, 'CONFIRM_PAYMENT', 'payments', id);
     
     res.json({
@@ -128,7 +117,6 @@ export const confirmPayment = async (req, res) => {
   }
 };
 
-// ดึงประวัติการชำระเงิน
 export const getPayments = async (req, res) => {
   try {
     const { status, userId } = req.query;
@@ -185,7 +173,6 @@ export const getPayments = async (req, res) => {
   }
 };
 
-// ดึงการชำระเงินตาม ID
 export const getPaymentById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -233,5 +220,54 @@ export const getPaymentById = async (req, res) => {
       message: 'เกิดข้อผิดพลาดในการดึงข้อมูลการชำระเงิน',
       error: error.message
     });
+  }
+};
+
+export const cancelExpiredPayments = async () => {
+  try {
+    const expiredPayments = await query(`
+      SELECT p.payment_id, p.booking_id
+      FROM payments p
+      WHERE p.status = 'pending'
+        AND p.created_at < DATE_SUB(NOW(), INTERVAL 15 MINUTE)
+    `);
+    
+    for (const payment of expiredPayments) {
+      await transaction(async (conn) => {
+        await conn.execute(
+          'UPDATE payments SET status = "failed" WHERE payment_id = ?',
+          [payment.payment_id]
+        );
+        
+        await conn.execute(
+          'UPDATE bookings SET status = "cancelled", cancellation_reason = "หมดเวลาชำระเงิน" WHERE booking_id = ?',
+          [payment.booking_id]
+        );
+        
+        await conn.execute(
+          'UPDATE court_time_slots SET status = "available", booking_id = NULL WHERE booking_id = ?',
+          [payment.booking_id]
+        );
+        
+        const [equipmentItems] = await conn.execute(
+          'SELECT equipment_id, quantity FROM booking_equipment WHERE booking_id = ?',
+          [payment.booking_id]
+        );
+        
+        for (const item of equipmentItems) {
+          await conn.execute(
+            'UPDATE equipment SET stock = stock + ? WHERE equipment_id = ?',
+            [item.quantity, item.equipment_id]
+          );
+        }
+      });
+      
+      console.log(`❌ Payment ${payment.payment_id} expired and cancelled`);
+    }
+    
+    return expiredPayments.length;
+  } catch (error) {
+    console.error('Error cancelling expired payments:', error);
+    return 0;
   }
 };

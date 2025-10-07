@@ -3,8 +3,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { testConnection } from './config/database.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
+import { cancelExpiredPayments } from './controllers/payment.controller.js';
 
-// Import routes
 import authRoutes from './routes/auth.routes.js';
 import userRoutes from './routes/user.routes.js';
 import venueRoutes from './routes/venue.routes.js';
@@ -21,13 +21,11 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT;
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static('uploads'));
 
-// Routes
 app.get('/health', (req, res) => {
   res.json({ success: true, message: 'Server is running' });
 });
@@ -51,7 +49,6 @@ app.get('/api', (req, res) => {
   });
 });
 
-// API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/venues', venueRoutes);
@@ -63,11 +60,20 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/upload', uploadRoutes);
 
-// Error handlers
 app.use(notFound);
 app.use(errorHandler);
 
-// Start server
+setInterval(async () => {
+  try {
+    const cancelledCount = await cancelExpiredPayments();
+    if (cancelledCount > 0) {
+      console.log(`⏰ Cancelled ${cancelledCount} expired payments`);
+    }
+  } catch (error) {
+    console.error('Error in payment expiry cron:', error);
+  }
+}, 5 * 60 * 1000);
+
 testConnection().then(() => {
   app.listen(PORT, () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);
