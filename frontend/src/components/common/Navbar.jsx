@@ -22,6 +22,14 @@ const Navbar = () => {
     navigate('/login');
   };
 
+  // กำหนด path สำหรับ Logo ตาม role
+  const getLogoPath = () => {
+    if (!isAuthenticated) return '/';
+    if (user?.role === 'member') return '/member/venues';
+    if (user?.role === 'admin' || user?.role === 'manager') return '/admin/dashboard';
+    return '/';
+  };
+
   const getMemberMenuItems = () => [
     {
       key: 'venues',
@@ -88,7 +96,8 @@ const Navbar = () => {
     <nav className="bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 shadow-lg sticky top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-20">
-          <Link to="/" className="flex items-center space-x-3 group">
+          {/* Logo - Redirect ตาม role */}
+          <Link to={getLogoPath()} className="flex items-center space-x-3 group">
             <div className="bg-white p-2 rounded-xl shadow-md group-hover:shadow-lg transition-shadow">
               <ShopOutlined className="text-3xl text-green-600" />
             </div>
@@ -101,14 +110,18 @@ const Navbar = () => {
           </Link>
 
           <div className="flex items-center space-x-8">
-            <Link 
-              to="/" 
-              className="text-white hover:text-green-100 transition-colors font-medium hidden sm:flex items-center gap-2"
-            >
-              <HomeOutlined />
-              หน้าแรก
-            </Link>
+            {/* แสดงลิงก์หน้าแรกเฉพาะตอนยังไม่ Login */}
+            {!isAuthenticated && (
+              <Link 
+                to="/" 
+                className="text-white hover:text-green-100 transition-colors font-medium hidden sm:flex items-center gap-2"
+              >
+                <HomeOutlined />
+                หน้าแรก
+              </Link>
+            )}
 
+            {/* ลิงก์ดูสนาม */}
             {isAuthenticated && user?.role === 'member' ? (
               <Link 
                 to="/member/venues" 

@@ -31,7 +31,7 @@ function App() {
       <BrowserRouter>
         <Routes>
           {/* Public Routes */}
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<HomeRedirect />} />
           <Route path="/venues" element={<GuestVenueBrowser />} />
           <Route path="/guest/venues/:id" element={<GuestVenueDetail />} />
           <Route path="/login" element={<Login />} />
@@ -97,6 +97,23 @@ function RoleBasedRedirect() {
   }
   
   return <Navigate to="/admin/dashboard" replace />;
+}
+
+// Component สำหรับ redirect หน้า Home
+function HomeRedirect() {
+  const { user, isAuthenticated } = useAuthStore();
+  
+  // ถ้าล็อกอินแล้ว redirect ตาม role
+  if (isAuthenticated && user) {
+    if (user.role === 'member') {
+      return <Navigate to="/member/venues" replace />;
+    } else if (user.role === 'admin' || user.role === 'manager') {
+      return <Navigate to="/admin/dashboard" replace />;
+    }
+  }
+  
+  // ถ้ายังไม่ล็อกอิน แสดงหน้า Home ปกติ
+  return <Home />;
 }
 
 export default App;
