@@ -20,17 +20,20 @@ import {
   CalendarOutlined,
   ClockCircleOutlined,
   CheckCircleOutlined,
+  ExclamationCircleOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import api from "../../../services/api";
 
 const { Option } = Select;
+const { confirm } = Modal;
 
 const BookingForm = () => {
   const { venueId, courtId } = useParams();
   const navigate = useNavigate();
   const [form] = Form.useForm();
-  // ลบบรรทัด const { modal } = App.useApp(); ออก
+  const [messageApi, contextHolder] = message.useMessage();
+  const [modal, modalContextHolder] = Modal.useModal();
 
   const [currentStep, setCurrentStep] = useState(0);
   const [venue, setVenue] = useState(null);
@@ -69,7 +72,7 @@ const BookingForm = () => {
       setCourt(courtData);
       setEquipment(equipmentRes.data || []);
     } catch (error) {
-      message.error("ไม่สามารถโหลดข้อมูลได้");
+      messageApi.error("ไม่สามารถโหลดข้อมูลได้");
       navigate(`/member/venues/${venueId}`);
     } finally {
       setLoading(false);
@@ -131,9 +134,6 @@ const BookingForm = () => {
     const openTime = dayjs(venue.opening_time, "HH:mm");
     const closeTime = dayjs(venue.closing_time, "HH:mm");
 
-    console.log("🏢 Venue times:", venue.opening_time, "-", venue.closing_time);
-    console.log("📋 Booked slots:", bookedSlots);
-
     let current = openTime;
 
     while (current.isBefore(closeTime)) {
@@ -154,10 +154,6 @@ const BookingForm = () => {
         return currentMinutes >= startMinutes && currentMinutes < endMinutes;
       });
 
-      if (isBooked) {
-        console.log(`🔒 ${currentTime} is booked (${bookedSlot?.status})`);
-      }
-
       slots.push({
         time: currentTime,
         isBooked: isBooked,
@@ -166,11 +162,6 @@ const BookingForm = () => {
 
       current = current.add(30, "minute");
     }
-
-    console.log(
-      "✅ Generated slots:",
-      slots.filter((s) => s.isBooked)
-    );
 
     return slots;
   };
@@ -199,14 +190,6 @@ const BookingForm = () => {
       const availableUntilClose = (closeMinutes - startMinutes) / 60;
       maxDuration = Math.min(maxDuration, availableUntilClose);
     }
-
-    console.log(
-      "⏱️ Max duration from",
-      selectedStartTime,
-      ":",
-      maxDuration,
-      "hours"
-    );
 
     for (let i = 0.5; i <= maxDuration; i += 0.5) {
       if (i >= 1) {
@@ -260,9 +243,6 @@ const BookingForm = () => {
     const startMinutes = timeToMinutes(startTime);
     const endMinutes = timeToMinutes(endTime);
 
-    console.log("🔍 Checking conflict for", startTime, "-", endTime);
-    console.log("📋 Against slots:", bookedSlots);
-
     const conflictSlots = [];
 
     bookedSlots.forEach((slot) => {
@@ -275,21 +255,9 @@ const BookingForm = () => {
         (startMinutes <= slotStartMinutes && endMinutes >= slotEndMinutes);
 
       if (isConflict) {
-        console.log(
-          "❌ Conflict with:",
-          slot.start_time,
-          "-",
-          slot.end_time,
-          `(${slot.status})`
-        );
         conflictSlots.push(slot);
       }
     });
-
-    console.log(
-      "Result:",
-      conflictSlots.length > 0 ? "❌ Has conflict" : "✅ No conflict"
-    );
 
     return conflictSlots.length > 0 ? conflictSlots : null;
   };
@@ -307,7 +275,7 @@ const BookingForm = () => {
         const conflicts = checkTimeConflict(startTime, endTime);
 
         if (conflicts) {
-          Modal.warning({
+          modal.warning({
             title: "⚠️ เวลาทับซ้อน",
             content: (
               <div>
@@ -369,6 +337,7 @@ const BookingForm = () => {
             ),
             okText: "เลือกเวลาใหม่",
             width: 500,
+            icon: <ExclamationCircleOutlined style={{ color: "#faad14" }} />,
           });
           return;
         }
@@ -378,6 +347,123 @@ const BookingForm = () => {
     } catch (error) {
       console.error("Validation error:", error);
     }
+  };
+
+  const confirmBooking = () => {
+    const startTime = selectedStartTime;
+    const endTime = dayjs(selectedStartTime, "HH:mm")
+      .add(selectedDuration, "hour")
+      .format("HH:mm");
+
+    modal.confirm({
+      title: "📝 ยืนยันการจอง",
+      icon: <CheckCircleOutlined style={{ color: "#16a34a" }} />,
+      width: 520,
+      content: (
+        <div>
+          <p style={{ marginBottom: "16px", fontSize: "15px", color: "#374151" }}>
+            คุณต้องการยืนยันการจองคอร์ทนี้ใช่หรือไม่?
+          </p>
+          
+          <div
+            style={{
+              backgroundColor: "#f9fafb",
+              border: "1px solid #e5e7eb",
+              borderRadius: "8px",
+              padding: "16px",
+              marginBottom: "12px",
+            }}
+          >
+            <div style={{ marginBottom: "12px" }}>
+              <p style={{ fontSize: "13px", color: "#6b7280", marginBottom: "4px" }}>
+                สนาม
+              </p>
+              <p style={{ fontSize: "15px", fontWeight: "600", color: "#111827" }}>
+                {venue.venue_name}
+              </p>
+            </div>
+
+            <div style={{ marginBottom: "12px" }}>
+              <p style={{ fontSize: "13px", color: "#6b7280", marginBottom: "4px" }}>
+                คอร์ท
+              </p>
+              <p style={{ fontSize: "15px", fontWeight: "600", color: "#111827" }}>
+                {court.court_name}
+              </p>
+            </div>
+
+            <div style={{ marginBottom: "12px" }}>
+              <p style={{ fontSize: "13px", color: "#6b7280", marginBottom: "4px" }}>
+                วันที่
+              </p>
+              <p style={{ fontSize: "15px", fontWeight: "600", color: "#111827" }}>
+                {selectedDate.format("DD/MM/YYYY")}
+              </p>
+            </div>
+
+            <div style={{ marginBottom: "12px" }}>
+              <p style={{ fontSize: "13px", color: "#6b7280", marginBottom: "4px" }}>
+                เวลา
+              </p>
+              <p style={{ fontSize: "15px", fontWeight: "600", color: "#111827" }}>
+                {startTime} - {endTime} น.
+              </p>
+            </div>
+
+            {selectedEquipment.length > 0 && (
+              <div style={{ marginBottom: "12px" }}>
+                <p style={{ fontSize: "13px", color: "#6b7280", marginBottom: "4px" }}>
+                  อุปกรณ์เสริม
+                </p>
+                {selectedEquipment.map((item) => {
+                  const equipmentItem = equipment.find(
+                    (e) => e.equipment_id === item.equipment_id
+                  );
+                  return (
+                    <p
+                      key={item.equipment_id}
+                      style={{ fontSize: "14px", color: "#374151", marginBottom: "2px" }}
+                    >
+                      • {equipmentItem?.equipment_name} x {item.quantity}
+                    </p>
+                  );
+                })}
+              </div>
+            )}
+
+            <div
+              style={{
+                borderTop: "1px solid #e5e7eb",
+                paddingTop: "12px",
+                marginTop: "12px",
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <p style={{ fontSize: "15px", fontWeight: "600", color: "#111827" }}>
+                  ราคารวมทั้งหมด
+                </p>
+                <p style={{ fontSize: "20px", fontWeight: "700", color: "#dc2626" }}>
+                  {totalPrice.toLocaleString()} บาท
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <p style={{ fontSize: "13px", color: "#6b7280", marginTop: "12px" }}>
+            💡 กรุณาตรวจสอบข้อมูลให้ถูกต้องก่อนยืนยันการจอง
+          </p>
+        </div>
+      ),
+      okText: "ยืนยันการจอง",
+      cancelText: "ยกเลิก",
+      okButtonProps: {
+        style: {
+          backgroundColor: "#16a34a",
+          borderColor: "#16a34a",
+        },
+      },
+      onOk: () => handleSubmit(),
+    });
   };
 
   const handleSubmit = async () => {
@@ -401,7 +487,7 @@ const BookingForm = () => {
       const response = await api.post("/bookings", bookingData);
 
       if (response.success) {
-        Modal.success({
+        modal.success({
           title: "✅ จองสำเร็จ",
           content: (
             <div>
@@ -434,7 +520,7 @@ const BookingForm = () => {
         errorMessage = error.message;
       }
 
-      Modal.error({
+      modal.error({
         title: "❌ ไม่สามารถจองได้",
         content: (
           <div>
@@ -497,7 +583,7 @@ const BookingForm = () => {
         },
       });
 
-      message.error(errorMessage);
+      messageApi.error(errorMessage);
     } finally {
       setSubmitting(false);
     }
@@ -535,375 +621,389 @@ const BookingForm = () => {
   ];
 
   return (
-    <div className="space-y-6">
-      <Button icon={<ArrowLeftOutlined />} onClick={handleBack} size="large">
-        กลับ
-      </Button>
+    <>
+      {contextHolder}
+      {modalContextHolder}
+      <div className="space-y-6">
+        <Button icon={<ArrowLeftOutlined />} onClick={handleBack} size="large">
+          กลับ
+        </Button>
 
-      <Card>
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold mb-2">จองคอร์ท</h1>
-          <div className="text-gray-600">
-            <p className="font-semibold">{venue.venue_name}</p>
-            <p>
-              {court.court_name} - {court.hourly_rate} บาท/ชั่วโมง
-            </p>
+        <Card>
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold mb-2">จองคอร์ท</h1>
+            <div className="text-gray-600">
+              <p className="font-semibold">{venue.venue_name}</p>
+              <p>
+                {court.court_name} - {court.hourly_rate} บาท/ชั่วโมง
+              </p>
+            </div>
           </div>
-        </div>
 
-        <Steps current={currentStep} items={steps} className="mb-8" />
+          <Steps current={currentStep} items={steps} className="mb-8" />
 
-        <Form form={form} layout="vertical">
-          {currentStep === 0 && (
-            <div className="space-y-6">
-              <Form.Item
-                label="เลือกวันที่"
-                name="booking_date"
-                rules={[{ required: true, message: "กรุณาเลือกวันที่" }]}
-              >
-                <DatePicker
-                  size="large"
-                  className="w-full"
-                  format="DD/MM/YYYY"
-                  disabledDate={(current) => {
-                    return current && current < dayjs().startOf("day");
-                  }}
-                  onChange={handleDateChange}
-                />
-              </Form.Item>
+          <Form form={form} layout="vertical">
+            {currentStep === 0 && (
+              <div className="space-y-6">
+                <Form.Item
+                  label="เลือกวันที่"
+                  name="booking_date"
+                  rules={[{ required: true, message: "กรุณาเลือกวันที่" }]}
+                >
+                  <DatePicker
+                    size="large"
+                    className="w-full"
+                    format="DD/MM/YYYY"
+                    disabledDate={(current) => {
+                      return current && current < dayjs().startOf("day");
+                    }}
+                    onChange={handleDateChange}
+                  />
+                </Form.Item>
 
-              {selectedDate && (
-                <>
-                  <Form.Item
-                    label="เลือกเวลาเริ่มต้น"
-                    name="start_time"
-                    rules={[{ required: true, message: "กรุณาเลือกเวลา" }]}
-                  >
-                    <Select
-                      size="large"
-                      placeholder="เลือกเวลา"
-                      onChange={setSelectedStartTime}
+                {selectedDate && (
+                  <>
+                    <Form.Item
+                      label="เลือกเวลาเริ่มต้น"
+                      name="start_time"
+                      rules={[{ required: true, message: "กรุณาเลือกเวลา" }]}
                     >
-                      {generateTimeSlots().map((slot) => {
-                        let backgroundColor = "white";
-                        let textColor = "inherit";
+                      <Select
+                        size="large"
+                        placeholder="เลือกเวลา"
+                        onChange={setSelectedStartTime}
+                      >
+                        {generateTimeSlots().map((slot) => {
+                          let backgroundColor = "white";
+                          let textColor = "inherit";
 
-                        if (slot.isBooked) {
-                          if (
-                            slot.status === "paid" ||
-                            slot.status === "confirmed"
-                          ) {
-                            backgroundColor = "#ffe4e1";
-                            textColor = "#dc3545";
-                          } else if (slot.status === "pending") {
-                            backgroundColor = "#fff4e6";
-                            textColor = "#f59e0b";
+                          if (slot.isBooked) {
+                            if (
+                              slot.status === "paid" ||
+                              slot.status === "confirmed"
+                            ) {
+                              backgroundColor = "#ffe4e1";
+                              textColor = "#dc3545";
+                            } else if (slot.status === "pending") {
+                              backgroundColor = "#fff4e6";
+                              textColor = "#f59e0b";
+                            }
                           }
-                        }
 
-                        return (
-                          <Option
-                            key={slot.time}
-                            value={slot.time}
-                            disabled={slot.isBooked}
-                            style={{
-                              backgroundColor: backgroundColor,
-                              color: textColor,
-                            }}
-                          >
-                            <div className="flex justify-between items-center">
-                              <span>{slot.time} น.</span>
-                              {slot.isBooked && (
-                                <Tag
-                                  color={
-                                    slot.status === "paid" ||
-                                    slot.status === "confirmed"
-                                      ? "red"
-                                      : "orange"
-                                  }
-                                  className="ml-2"
-                                >
-                                  {slot.status === "paid"
-                                    ? "จองแล้ว"
-                                    : slot.status === "confirmed"
-                                    ? "ยืนยันแล้ว"
-                                    : "รอชำระเงิน"}
-                                </Tag>
-                              )}
-                            </div>
-                          </Option>
-                        );
-                      })}
-                    </Select>
-                  </Form.Item>
+                          return (
+                            <Option
+                              key={slot.time}
+                              value={slot.time}
+                              disabled={slot.isBooked}
+                              style={{
+                                backgroundColor: backgroundColor,
+                                color: textColor,
+                              }}
+                            >
+                              <div className="flex justify-between items-center">
+                                <span>{slot.time} น.</span>
+                                {slot.isBooked && (
+                                  <Tag
+                                    color={
+                                      slot.status === "paid" ||
+                                      slot.status === "confirmed"
+                                        ? "red"
+                                        : "orange"
+                                    }
+                                    className="ml-2"
+                                  >
+                                    {slot.status === "paid"
+                                      ? "จองแล้ว"
+                                      : slot.status === "confirmed"
+                                      ? "ยืนยันแล้ว"
+                                      : "รอชำระเงิน"}
+                                  </Tag>
+                                )}
+                              </div>
+                            </Option>
+                          );
+                        })}
+                      </Select>
+                    </Form.Item>
 
-                  <Form.Item
-                    label="ระยะเวลา (ขั้นต่ำ 1 ชั่วโมง)"
-                    name="duration"
-                    rules={[{ required: true, message: "กรุณาเลือกระยะเวลา" }]}
-                  >
-                    <Select
-                      size="large"
-                      placeholder="เลือกระยะเวลา"
-                      value={selectedDuration}
-                      onChange={setSelectedDuration}
-                      disabled={!selectedStartTime}
+                    <Form.Item
+                      label="ระยะเวลา (ขั้นต่ำ 1 ชั่วโมง)"
+                      name="duration"
+                      rules={[
+                        { required: true, message: "กรุณาเลือกระยะเวลา" },
+                      ]}
                     >
-                      {generateDurationOptions().map((option) => (
-                        <Option key={option.value} value={option.value}>
-                          {option.label}
-                        </Option>
-                      ))}
-                    </Select>
-                  </Form.Item>
+                      <Select
+                        size="large"
+                        placeholder="เลือกระยะเวลา"
+                        value={selectedDuration}
+                        onChange={setSelectedDuration}
+                        disabled={!selectedStartTime}
+                      >
+                        {generateDurationOptions().map((option) => (
+                          <Option key={option.value} value={option.value}>
+                            {option.label}
+                          </Option>
+                        ))}
+                      </Select>
+                    </Form.Item>
 
-                  {selectedStartTime && selectedDuration && (
-                    <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                      <p className="text-sm text-gray-600 mb-1">เวลาที่จอง</p>
-                      <p className="font-semibold text-lg text-blue-700">
+                    {selectedStartTime && selectedDuration && (
+                      <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                        <p className="text-sm text-gray-600 mb-1">
+                          เวลาที่จอง
+                        </p>
+                        <p className="font-semibold text-lg text-blue-700">
+                          {selectedStartTime} -{" "}
+                          {dayjs(selectedStartTime, "HH:mm")
+                            .add(selectedDuration, "hour")
+                            .format("HH:mm")}{" "}
+                          น.
+                        </p>
+                        <p className="text-sm text-gray-600 mt-2">
+                          ระยะเวลา:{" "}
+                          <span className="font-semibold">
+                            {selectedDuration} ชั่วโมง
+                          </span>
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          ราคาคอร์ท:{" "}
+                          <span className="font-semibold text-green-600">
+                            {(
+                              court.hourly_rate * selectedDuration
+                            ).toLocaleString()}{" "}
+                            บาท
+                          </span>
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                      <p className="text-sm font-semibold mb-3 text-gray-700">
+                        📌 คำอธิบายสถานะ:
+                      </p>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex items-center gap-3">
+                          <div className="w-6 h-6 bg-white border-2 border-green-500 rounded flex items-center justify-center">
+                            <span className="text-green-600 text-xs">✓</span>
+                          </div>
+                          <span className="text-gray-700">
+                            ว่าง - สามารถจองได้
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div
+                            className="w-6 h-6 rounded flex items-center justify-center"
+                            style={{ backgroundColor: "#fff4e6" }}
+                          >
+                            <span className="text-orange-600 text-xs">⏳</span>
+                          </div>
+                          <span className="text-orange-600 font-medium">
+                            รอชำระเงิน - จองไว้ชั่วคราว
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div
+                            className="w-6 h-6 rounded flex items-center justify-center"
+                            style={{ backgroundColor: "#ffe4e1" }}
+                          >
+                            <span className="text-red-600 text-xs">✕</span>
+                          </div>
+                          <span className="text-red-600 font-medium">
+                            จองแล้ว - ไม่สามารถจองได้
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                <Button
+                  type="primary"
+                  size="large"
+                  block
+                  onClick={handleNext}
+                  disabled={
+                    !selectedDate || !selectedStartTime || !selectedDuration
+                  }
+                  className="bg-red-600 hover:bg-red-700"
+                >
+                  ถัดไป
+                </Button>
+              </div>
+            )}
+
+            {currentStep === 1 && (
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">
+                    เลือกอุปกรณ์เสริม (ถ้าต้องการ)
+                  </h3>
+                  {equipment.length > 0 ? (
+                    <div className="space-y-4">
+                      {equipment.map((item) => (
+                        <Card key={item.equipment_id} size="small">
+                          <div className="flex justify-between items-center">
+                            <div>
+                              <p className="font-semibold">
+                                {item.equipment_name}
+                              </p>
+                              <p className="text-sm text-gray-600">
+                                {item.rental_price} บาท/ชิ้น
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                คงเหลือ: {item.stock} ชิ้น
+                              </p>
+                            </div>
+                            <div>
+                              <InputNumber
+                                min={0}
+                                max={item.stock}
+                                defaultValue={0}
+                                onChange={(value) =>
+                                  handleEquipmentChange(
+                                    item.equipment_id,
+                                    value
+                                  )
+                                }
+                              />
+                            </div>
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  ) : (
+                    <Empty description="ไม่มีอุปกรณ์ให้เช่า" />
+                  )}
+                </div>
+
+                <div className="flex gap-4">
+                  <Button size="large" onClick={() => setCurrentStep(0)} block>
+                    กลับ
+                  </Button>
+                  <Button
+                    type="primary"
+                    size="large"
+                    onClick={handleNext}
+                    block
+                    className="bg-red-600 hover:bg-red-700"
+                  >
+                    ถัดไป
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {currentStep === 2 && (
+              <div className="space-y-6">
+                <Card title="สรุปการจอง">
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-sm text-gray-600">สนาม</p>
+                      <p className="font-semibold">{venue.venue_name}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">คอร์ท</p>
+                      <p className="font-semibold">{court.court_name}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">วันที่</p>
+                      <p className="font-semibold">
+                        {selectedDate.format("DD/MM/YYYY")}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">เวลา</p>
+                      <p className="font-semibold">
                         {selectedStartTime} -{" "}
                         {dayjs(selectedStartTime, "HH:mm")
                           .add(selectedDuration, "hour")
                           .format("HH:mm")}{" "}
                         น.
                       </p>
-                      <p className="text-sm text-gray-600 mt-2">
-                        ระยะเวลา:{" "}
-                        <span className="font-semibold">
-                          {selectedDuration} ชั่วโมง
-                        </span>
+                    </div>
+
+                    <Divider />
+
+                    <div>
+                      <p className="text-sm text-gray-600 mb-2">
+                        รายการค่าใช้จ่าย
                       </p>
-                      <p className="text-sm text-gray-600">
-                        ราคาคอร์ท:{" "}
-                        <span className="font-semibold text-green-600">
-                          {(
-                            court.hourly_rate * selectedDuration
-                          ).toLocaleString()}{" "}
-                          บาท
-                        </span>
-                      </p>
-                    </div>
-                  )}
-
-                  <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                    <p className="text-sm font-semibold mb-3 text-gray-700">
-                      📌 คำอธิบายสถานะ:
-                    </p>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex items-center gap-3">
-                        <div className="w-6 h-6 bg-white border-2 border-green-500 rounded flex items-center justify-center">
-                          <span className="text-green-600 text-xs">✓</span>
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span>ค่าคอร์ท ({selectedDuration} ชั่วโมง)</span>
+                          <span>
+                            {(
+                              court.hourly_rate * selectedDuration
+                            ).toLocaleString()}{" "}
+                            บาท
+                          </span>
                         </div>
-                        <span className="text-gray-700">
-                          ว่าง - สามารถจองได้
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div
-                          className="w-6 h-6 rounded flex items-center justify-center"
-                          style={{ backgroundColor: "#fff4e6" }}
-                        >
-                          <span className="text-orange-600 text-xs">⏳</span>
-                        </div>
-                        <span className="text-orange-600 font-medium">
-                          รอชำระเงิน - จองไว้ชั่วคราว
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div
-                          className="w-6 h-6 rounded flex items-center justify-center"
-                          style={{ backgroundColor: "#ffe4e1" }}
-                        >
-                          <span className="text-red-600 text-xs">✕</span>
-                        </div>
-                        <span className="text-red-600 font-medium">
-                          จองแล้ว - ไม่สามารถจองได้
-                        </span>
+                        {selectedEquipment.length > 0 && (
+                          <>
+                            <p className="text-sm text-gray-600 mt-2">
+                              อุปกรณ์:
+                            </p>
+                            {selectedEquipment.map((item) => {
+                              const equipmentItem = equipment.find(
+                                (e) => e.equipment_id === item.equipment_id
+                              );
+                              return (
+                                <div
+                                  key={item.equipment_id}
+                                  className="flex justify-between"
+                                >
+                                  <span className="text-sm">
+                                    {equipmentItem?.equipment_name} x{" "}
+                                    {item.quantity}
+                                  </span>
+                                  <span className="text-sm">
+                                    {(
+                                      equipmentItem?.rental_price *
+                                      item.quantity
+                                    ).toLocaleString()}{" "}
+                                    บาท
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </>
+                        )}
                       </div>
                     </div>
-                  </div>
-                </>
-              )}
 
-              <Button
-                type="primary"
-                size="large"
-                block
-                onClick={handleNext}
-                disabled={
-                  !selectedDate || !selectedStartTime || !selectedDuration
-                }
-                className="bg-red-600 hover:bg-red-700"
-              >
-                ถัดไป
-              </Button>
-            </div>
-          )}
+                    <Divider />
 
-          {currentStep === 1 && (
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-semibold mb-4">
-                  เลือกอุปกรณ์เสริม (ถ้าต้องการ)
-                </h3>
-                {equipment.length > 0 ? (
-                  <div className="space-y-4">
-                    {equipment.map((item) => (
-                      <Card key={item.equipment_id} size="small">
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <p className="font-semibold">
-                              {item.equipment_name}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              {item.rental_price} บาท/ชิ้น
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              คงเหลือ: {item.stock} ชิ้น
-                            </p>
-                          </div>
-                          <div>
-                            <InputNumber
-                              min={0}
-                              max={item.stock}
-                              defaultValue={0}
-                              onChange={(value) =>
-                                handleEquipmentChange(item.equipment_id, value)
-                              }
-                            />
-                          </div>
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
-                ) : (
-                  <Empty description="ไม่มีอุปกรณ์ให้เช่า" />
-                )}
-              </div>
-
-              <div className="flex gap-4">
-                <Button size="large" onClick={() => setCurrentStep(0)} block>
-                  กลับ
-                </Button>
-                <Button
-                  type="primary"
-                  size="large"
-                  onClick={handleNext}
-                  block
-                  className="bg-red-600 hover:bg-red-700"
-                >
-                  ถัดไป
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {currentStep === 2 && (
-            <div className="space-y-6">
-              <Card title="สรุปการจอง">
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-sm text-gray-600">สนาม</p>
-                    <p className="font-semibold">{venue.venue_name}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">คอร์ท</p>
-                    <p className="font-semibold">{court.court_name}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">วันที่</p>
-                    <p className="font-semibold">
-                      {selectedDate.format("DD/MM/YYYY")}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">เวลา</p>
-                    <p className="font-semibold">
-                      {selectedStartTime} -{" "}
-                      {dayjs(selectedStartTime, "HH:mm")
-                        .add(selectedDuration, "hour")
-                        .format("HH:mm")}{" "}
-                      น.
-                    </p>
-                  </div>
-
-                  <Divider />
-
-                  <div>
-                    <p className="text-sm text-gray-600 mb-2">
-                      รายการค่าใช้จ่าย
-                    </p>
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span>ค่าคอร์ท ({selectedDuration} ชั่วโมง)</span>
-                        <span>
-                          {(
-                            court.hourly_rate * selectedDuration
-                          ).toLocaleString()}{" "}
-                          บาท
-                        </span>
-                      </div>
-                      {selectedEquipment.length > 0 && (
-                        <>
-                          <p className="text-sm text-gray-600 mt-2">อุปกรณ์:</p>
-                          {selectedEquipment.map((item) => {
-                            const equipmentItem = equipment.find(
-                              (e) => e.equipment_id === item.equipment_id
-                            );
-                            return (
-                              <div
-                                key={item.equipment_id}
-                                className="flex justify-between"
-                              >
-                                <span className="text-sm">
-                                  {equipmentItem?.equipment_name} x{" "}
-                                  {item.quantity}
-                                </span>
-                                <span className="text-sm">
-                                  {(
-                                    equipmentItem?.rental_price * item.quantity
-                                  ).toLocaleString()}{" "}
-                                  บาท
-                                </span>
-                              </div>
-                            );
-                          })}
-                        </>
-                      )}
+                    <div className="flex justify-between items-center">
+                      <span className="text-lg font-bold">ราคารวม</span>
+                      <span className="text-2xl font-bold text-red-600">
+                        {totalPrice.toLocaleString()} บาท
+                      </span>
                     </div>
                   </div>
+                </Card>
 
-                  <Divider />
-
-                  <div className="flex justify-between items-center">
-                    <span className="text-lg font-bold">ราคารวม</span>
-                    <span className="text-2xl font-bold text-red-600">
-                      {totalPrice.toLocaleString()} บาท
-                    </span>
-                  </div>
+                <div className="flex gap-4">
+                  <Button size="large" onClick={() => setCurrentStep(1)} block>
+                    กลับ
+                  </Button>
+                  <Button
+                    type="primary"
+                    size="large"
+                    onClick={confirmBooking}
+                    loading={submitting}
+                    block
+                    className="bg-red-600 hover:bg-red-700"
+                  >
+                    ยืนยันการจอง
+                  </Button>
                 </div>
-              </Card>
-
-              <div className="flex gap-4">
-                <Button size="large" onClick={() => setCurrentStep(1)} block>
-                  กลับ
-                </Button>
-                <Button
-                  type="primary"
-                  size="large"
-                  onClick={handleSubmit}
-                  loading={submitting}
-                  block
-                  className="bg-red-600 hover:bg-red-700"
-                >
-                  ยืนยันการจอง
-                </Button>
               </div>
-            </div>
-          )}
-        </Form>
-      </Card>
-    </div>
+            )}
+          </Form>
+        </Card>
+      </div>
+    </>
   );
 };
 
