@@ -3,7 +3,8 @@ import {
   createPayment,
   confirmPayment,
   getPayments,
-  getPaymentById
+  getPaymentById,
+  getPaymentsByBookingId, // เพิ่ม
 } from '../controllers/payment.controller.js';
 import { authenticate, authorize } from '../middleware/auth.js';
 

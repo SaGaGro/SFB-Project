@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Table, Tag, Button, Modal, message, Space, Card } from 'antd';
-import { EyeOutlined, CloseCircleOutlined } from '@ant-design/icons';
+import { Table, Tag, Button, Modal, message, Space, Card, Spin } from 'antd';
+import { EyeOutlined, CloseCircleOutlined, QrcodeOutlined } from '@ant-design/icons';
 import api from '../../../services/api';
 
 const MyBookings = () => {
@@ -9,6 +9,9 @@ const MyBookings = () => {
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [cancelModalVisible, setCancelModalVisible] = useState(false);
+  const [qrModalVisible, setQrModalVisible] = useState(false);
+  const [qrCodeData, setQrCodeData] = useState(null);
+  const [loadingQR, setLoadingQR] = useState(false);
 
   useEffect(() => {
     fetchBookings();
@@ -22,6 +25,47 @@ const MyBookings = () => {
       message.error('ไม่สามารถโหลดข้อมูลการจองได้');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleViewQR = async (booking) => {
+    try {
+      setLoadingQR(true);
+      setQrModalVisible(true);
+      
+      // ดึงข้อมูล payment ที่มี QR Code
+      const response = await api.get(`/payments?bookingId=${booking.booking_id}`);
+      
+      if (response.success && response.data.length > 0) {
+        const payment = response.data[0];
+        
+        // ถ้ามี omise_charge_id ให้ดึง QR Code จาก Omise
+        if (payment.omise_charge_id) {
+          const chargeResponse = await api.get(`/omise/charge/${payment.omise_charge_id}`);
+          
+          setQrCodeData({
+            booking_id: booking.booking_id,
+            amount: payment.amount,
+            charge_id: payment.omise_charge_id,
+            qr_code_url: payment.qr_code, // URL ของ QR Code จาก database
+            status: payment.status,
+            paid_at: payment.paid_at,
+            created_at: payment.created_at,
+          });
+        } else {
+          message.warning('ไม่พบข้อมูล QR Code สำหรับการจองนี้');
+          setQrModalVisible(false);
+        }
+      } else {
+        message.warning('ไม่พบข้อมูลการชำระเงิน');
+        setQrModalVisible(false);
+      }
+    } catch (error) {
+      console.error('Error fetching QR code:', error);
+      message.error('ไม่สามารถโหลด QR Code ได้');
+      setQrModalVisible(false);
+    } finally {
+      setLoadingQR(false);
     }
   };
 
@@ -78,7 +122,7 @@ const MyBookings = () => {
       dataIndex: 'total_price',
       key: 'total_price',
       render: (price) => (
-        <span className="font-semibold text-red-600">
+        <span className="font-semibold text-green-600">
           {parseFloat(price).toLocaleString()} บาท
         </span>
       ),
@@ -95,7 +139,7 @@ const MyBookings = () => {
     {
       title: 'จัดการ',
       key: 'action',
-      width: 200,
+      width: 280,
       render: (_, record) => (
         <Space>
           <Button
@@ -108,6 +152,17 @@ const MyBookings = () => {
           >
             ดู
           </Button>
+          {(record.status === 'pending' || record.status === 'paid') && (
+            <Button
+              size="small"
+              type="primary"
+              icon={<QrcodeOutlined />}
+              onClick={() => handleViewQR(record)}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              QR Code
+            </Button>
+          )}
           {record.status !== 'cancelled' && record.status !== 'paid' && (
             <Button
               size="small"
@@ -128,7 +183,7 @@ const MyBookings = () => {
 
   return (
     <div className="space-y-6">
-      <div className="bg-gradient-to-r from-red-600 to-red-800 -mx-4 -mt-8 px-4 py-8 mb-8">
+      <div className="bg-gradient-to-r from-green-600 to-green-800 -mx-4 -mt-8 px-4 py-8 mb-8">
         <div className="container mx-auto">
           <h1 className="text-3xl font-bold text-white">การจองของฉัน</h1>
           <p className="text-white opacity-90 mt-2">
@@ -143,7 +198,7 @@ const MyBookings = () => {
           dataSource={bookings}
           rowKey="booking_id"
           loading={loading}
-          scroll={{ x: 1000 }}
+          scroll={{ x: 1200 }}
           pagination={{ 
             pageSize: 10,
             showTotal: (total) => `ทั้งหมด ${total} รายการ`
@@ -151,6 +206,7 @@ const MyBookings = () => {
         />
       </Card>
 
+      {/* Detail Modal */}
       <Modal
         title="รายละเอียดการจอง"
         open={detailModalVisible}
@@ -197,7 +253,7 @@ const MyBookings = () => {
               </div>
               <div className="col-span-2">
                 <p className="text-gray-600 text-sm">ราคารวม</p>
-                <p className="font-bold text-2xl text-red-600">
+                <p className="font-bold text-2xl text-green-600">
                   {parseFloat(selectedBooking.total_price).toLocaleString()} บาท
                 </p>
               </div>
@@ -206,6 +262,7 @@ const MyBookings = () => {
         )}
       </Modal>
 
+      {/* Cancel Modal */}
       <Modal
         title="ยืนยันการยกเลิก"
         open={cancelModalVisible}
@@ -219,6 +276,113 @@ const MyBookings = () => {
         <p className="text-gray-600 text-sm mt-2">
           การยกเลิกจะไม่สามารถกู้คืนได้
         </p>
+      </Modal>
+
+      {/* QR Code Modal */}
+      <Modal
+        title="QR Code สำหรับชำระเงิน"
+        open={qrModalVisible}
+        onCancel={() => setQrModalVisible(false)}
+        footer={[
+          <Button key="close" onClick={() => setQrModalVisible(false)}>
+            ปิด
+          </Button>
+        ]}
+        width={500}
+      >
+        {loadingQR ? (
+          <div className="flex justify-center items-center py-20">
+            <Spin size="large" />
+          </div>
+        ) : qrCodeData ? (
+          <div className="text-center space-y-4">
+            <div className="flex justify-center">
+              <div className="bg-white p-4 rounded-xl border-4 border-green-500 shadow-lg">
+                {qrCodeData.qr_code_url ? (
+                  <img 
+                    src={qrCodeData.qr_code_url} 
+                    alt="QR Code" 
+                    className="w-64 h-64 object-contain" 
+                  />
+                ) : (
+                  <div className="w-64 h-64 flex items-center justify-center bg-gray-100">
+                    <p className="text-gray-500">ไม่พบ QR Code</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="bg-green-50 p-4 rounded-lg">
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">รหัสการจอง</span>
+                  <span className="font-bold">#{qrCodeData.booking_id}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">จำนวนเงิน</span>
+                  <span className="font-bold text-xl text-green-600">
+                    {parseFloat(qrCodeData.amount).toLocaleString()} บาท
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">สถานะ</span>
+                  <Tag color={qrCodeData.status === 'paid' ? 'green' : 'orange'}>
+                    {qrCodeData.status === 'paid' ? 'ชำระแล้ว' : 'รอชำระเงิน'}
+                  </Tag>
+                </div>
+                {qrCodeData.paid_at && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">ชำระเมื่อ</span>
+                    <span className="text-sm">
+                      {new Date(qrCodeData.paid_at).toLocaleString('th-TH')}
+                    </span>
+                  </div>
+                )}
+                {qrCodeData.charge_id && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600 text-xs">Charge ID</span>
+                    <span className="text-xs font-mono">{qrCodeData.charge_id}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {qrCodeData.status !== 'paid' && (
+              <>
+                <div className="text-left bg-blue-50 p-4 rounded-lg">
+                  <p className="font-semibold mb-2">📱 วิธีชำระเงิน:</p>
+                  <ol className="text-sm text-gray-700 space-y-1 list-decimal list-inside">
+                    <li>เปิดแอพธนาคารของคุณ</li>
+                    <li>เลือกสแกน QR Code</li>
+                    <li>สแกน QR Code ด้านบน</li>
+                    <li>ยืนยันการชำระเงิน</li>
+                  </ol>
+                </div>
+
+                <div className="bg-yellow-50 border border-yellow-200 p-3 rounded-lg">
+                  <p className="text-sm text-yellow-800">
+                    ⚠️ <strong>หมายเหตุ:</strong> QR Code นี้มีอายุ 15 นาที หากหมดเวลาจะต้องสร้างใหม่
+                  </p>
+                </div>
+              </>
+            )}
+
+            {qrCodeData.status === 'paid' && (
+              <div className="bg-green-100 border border-green-300 p-4 rounded-lg">
+                <p className="text-green-800 font-semibold">
+                  ✅ ชำระเงินสำเร็จแล้ว
+                </p>
+                <p className="text-sm text-green-700 mt-1">
+                  คุณสามารถใช้บริการได้ตามวันและเวลาที่จอง
+                </p>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="text-center py-10">
+            <p className="text-gray-500">ไม่พบข้อมูล QR Code</p>
+          </div>
+        )}
       </Modal>
     </div>
   );

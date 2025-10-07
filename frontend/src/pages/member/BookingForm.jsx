@@ -28,7 +28,7 @@ import {
   CopyOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
-import { QRCodeSVG } from 'qrcode.react';
+import { QRCodeSVG } from "qrcode.react";
 import api from "../../../services/api";
 
 const { Option } = Select;
@@ -68,6 +68,22 @@ const BookingForm = () => {
   useEffect(() => {
     calculateTotalPrice();
   }, [selectedDuration, selectedEquipment, court]);
+
+  useEffect(() => {
+    let interval;
+    if (paymentModalVisible && paymentData?.chargeId) {
+      // เช็คทันทีตอนเปิด modal
+      checkPaymentStatusPeriodically();
+
+      // จากนั้นเช็คทุก 5 วินาที
+      interval = setInterval(() => {
+        checkPaymentStatusPeriodically();
+      }, 5000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [paymentModalVisible, paymentData]);
 
   const fetchData = async () => {
     try {
@@ -202,7 +218,10 @@ const BookingForm = () => {
       if (i >= 1) {
         const hours = Math.floor(i);
         const minutes = (i % 1) * 60;
-        const label = minutes === 0 ? `${hours} ชั่วโมง` : `${hours} ชั่วโมง ${minutes} นาที`;
+        const label =
+          minutes === 0
+            ? `${hours} ชั่วโมง`
+            : `${hours} ชั่วโมง ${minutes} นาที`;
         options.push({ value: i, label: label });
       }
     }
@@ -216,7 +235,9 @@ const BookingForm = () => {
 
   const handleEquipmentChange = (equipmentId, quantity) => {
     const newSelected = [...selectedEquipment];
-    const index = newSelected.findIndex((item) => item.equipment_id === equipmentId);
+    const index = newSelected.findIndex(
+      (item) => item.equipment_id === equipmentId
+    );
 
     if (quantity > 0) {
       if (index >= 0) {
@@ -273,15 +294,47 @@ const BookingForm = () => {
             content: (
               <div>
                 <p style={{ marginBottom: "12px" }}>
-                  ช่วงเวลาที่คุณเลือก <strong>{startTime} - {endTime} น.</strong> มีการจองอยู่แล้ว:
+                  ช่วงเวลาที่คุณเลือก{" "}
+                  <strong>
+                    {startTime} - {endTime} น.
+                  </strong>{" "}
+                  มีการจองอยู่แล้ว:
                 </p>
-                <div style={{ backgroundColor: "#fef2f2", border: "1px solid #fecaca", borderRadius: "8px", padding: "12px" }}>
+                <div
+                  style={{
+                    backgroundColor: "#fef2f2",
+                    border: "1px solid #fecaca",
+                    borderRadius: "8px",
+                    padding: "12px",
+                  }}
+                >
                   {conflicts.map((slot, index) => (
-                    <div key={index} style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: index < conflicts.length - 1 ? "8px" : "0" }}>
-                      <Tag color={slot.status === "paid" || slot.status === "confirmed" ? "red" : "orange"}>
-                        {slot.status === "paid" ? "จองแล้ว" : slot.status === "confirmed" ? "ยืนยันแล้ว" : "รอชำระ"}
+                    <div
+                      key={index}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        marginBottom:
+                          index < conflicts.length - 1 ? "8px" : "0",
+                      }}
+                    >
+                      <Tag
+                        color={
+                          slot.status === "paid" || slot.status === "confirmed"
+                            ? "red"
+                            : "orange"
+                        }
+                      >
+                        {slot.status === "paid"
+                          ? "จองแล้ว"
+                          : slot.status === "confirmed"
+                          ? "ยืนยันแล้ว"
+                          : "รอชำระ"}
                       </Tag>
-                      <span style={{ fontSize: "14px" }}>{slot.start_time} - {slot.end_time} น.</span>
+                      <span style={{ fontSize: "14px" }}>
+                        {slot.start_time} - {slot.end_time} น.
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -318,13 +371,41 @@ const BookingForm = () => {
 
       console.log("📤 Submitting booking:", bookingData);
 
-      const response = await api.post("/bookings", bookingData);
+      // 1. สร้างการจอง
+      const bookingResponse = await api.post("/bookings", bookingData);
 
-      if (response.success) {
-        const deadline = new Date(response.data.deadline);
-        setPaymentData(response.data);
-        setPaymentDeadline(deadline);
-        setPaymentModalVisible(true);
+      if (bookingResponse.success) {
+        const bookingId = bookingResponse.data.bookingId;
+
+        console.log("✅ Booking created:", bookingId);
+
+        // 2. สร้าง Omise Charge
+        try {
+          const chargeResponse = await api.post("/omise/create-charge", {
+            booking_id: bookingId,
+          });
+
+          if (chargeResponse.success) {
+            console.log("✅ Omise charge created:", chargeResponse.data);
+
+            const deadline = new Date(Date.now() + 15 * 60 * 1000);
+            setPaymentData({
+              bookingId: bookingId,
+              chargeId: chargeResponse.data.charge_id,
+              totalPrice: chargeResponse.data.amount,
+              qrCodeUrl: chargeResponse.data.qr_code_url,
+              expiresAt: chargeResponse.data.expires_at,
+            });
+            setPaymentDeadline(deadline);
+            setPaymentModalVisible(true);
+          }
+        } catch (chargeError) {
+          console.error("❌ Charge creation error:", chargeError);
+          messageApi.error(
+            "สร้างการจองสำเร็จ แต่เกิดข้อผิดพลาดในการสร้าง QR Code"
+          );
+          navigate("/member/my-bookings");
+        }
       }
     } catch (error) {
       console.error("❌ Booking error:", error);
@@ -335,13 +416,15 @@ const BookingForm = () => {
   };
 
   const checkPaymentStatusPeriodically = async () => {
-    if (!paymentData) return;
+    if (!paymentData?.chargeId) return;
 
     setCheckingPayment(true);
     try {
-      const response = await api.get(`/bookings/${paymentData.bookingId}/payment-status`);
-      
-      if (response.success && response.data.status === 'paid') {
+      const response = await api.get(`/omise/charge/${paymentData.chargeId}`);
+
+      console.log("🔍 Payment status:", response.data);
+
+      if (response.success && response.data.paid) {
         setPaymentModalVisible(false);
         modal.success({
           title: "✅ ชำระเงินสำเร็จ",
@@ -356,18 +439,6 @@ const BookingForm = () => {
       setCheckingPayment(false);
     }
   };
-
-  useEffect(() => {
-    let interval;
-    if (paymentModalVisible && paymentData) {
-      interval = setInterval(() => {
-        checkPaymentStatusPeriodically();
-      }, 5000);
-    }
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [paymentModalVisible, paymentData]);
 
   const handleBack = () => {
     navigate(-1);
@@ -395,7 +466,7 @@ const BookingForm = () => {
     <>
       {contextHolder}
       {modalContextHolder}
-      
+
       <div className="space-y-6">
         <Button icon={<ArrowLeftOutlined />} onClick={handleBack} size="large">
           กลับ
@@ -406,7 +477,9 @@ const BookingForm = () => {
             <h1 className="text-2xl font-bold mb-2">จองคอร์ท</h1>
             <div className="text-gray-600">
               <p className="font-semibold">{venue.venue_name}</p>
-              <p>{court.court_name} - {court.hourly_rate} บาท/ชั่วโมง</p>
+              <p>
+                {court.court_name} - {court.hourly_rate} บาท/ชั่วโมง
+              </p>
             </div>
           </div>
 
@@ -424,7 +497,9 @@ const BookingForm = () => {
                     size="large"
                     className="w-full"
                     format="DD/MM/YYYY"
-                    disabledDate={(current) => current && current < dayjs().startOf("day")}
+                    disabledDate={(current) =>
+                      current && current < dayjs().startOf("day")
+                    }
                     onChange={handleDateChange}
                   />
                 </Form.Item>
@@ -436,13 +511,20 @@ const BookingForm = () => {
                       name="start_time"
                       rules={[{ required: true, message: "กรุณาเลือกเวลา" }]}
                     >
-                      <Select size="large" placeholder="เลือกเวลา" onChange={setSelectedStartTime}>
+                      <Select
+                        size="large"
+                        placeholder="เลือกเวลา"
+                        onChange={setSelectedStartTime}
+                      >
                         {generateTimeSlots().map((slot) => {
                           let backgroundColor = "white";
                           let textColor = "inherit";
 
                           if (slot.isBooked) {
-                            if (slot.status === "paid" || slot.status === "confirmed") {
+                            if (
+                              slot.status === "paid" ||
+                              slot.status === "confirmed"
+                            ) {
                               backgroundColor = "#ffe4e1";
                               textColor = "#dc3545";
                             } else if (slot.status === "pending") {
@@ -461,8 +543,20 @@ const BookingForm = () => {
                               <div className="flex justify-between items-center">
                                 <span>{slot.time} น.</span>
                                 {slot.isBooked && (
-                                  <Tag color={slot.status === "paid" || slot.status === "confirmed" ? "red" : "orange"} className="ml-2">
-                                    {slot.status === "paid" ? "จองแล้ว" : slot.status === "confirmed" ? "ยืนยันแล้ว" : "รอชำระเงิน"}
+                                  <Tag
+                                    color={
+                                      slot.status === "paid" ||
+                                      slot.status === "confirmed"
+                                        ? "red"
+                                        : "orange"
+                                    }
+                                    className="ml-2"
+                                  >
+                                    {slot.status === "paid"
+                                      ? "จองแล้ว"
+                                      : slot.status === "confirmed"
+                                      ? "ยืนยันแล้ว"
+                                      : "รอชำระเงิน"}
                                   </Tag>
                                 )}
                               </div>
@@ -475,7 +569,9 @@ const BookingForm = () => {
                     <Form.Item
                       label="ระยะเวลา"
                       name="duration"
-                      rules={[{ required: true, message: "กรุณาเลือกระยะเวลา" }]}
+                      rules={[
+                        { required: true, message: "กรุณาเลือกระยะเวลา" },
+                      ]}
                     >
                       <Select
                         size="large"
@@ -485,7 +581,9 @@ const BookingForm = () => {
                         disabled={!selectedStartTime}
                       >
                         {generateDurationOptions().map((option) => (
-                          <Option key={option.value} value={option.value}>{option.label}</Option>
+                          <Option key={option.value} value={option.value}>
+                            {option.label}
+                          </Option>
                         ))}
                       </Select>
                     </Form.Item>
@@ -494,10 +592,20 @@ const BookingForm = () => {
                       <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
                         <p className="text-sm text-gray-600 mb-1">เวลาที่จอง</p>
                         <p className="font-semibold text-lg text-blue-700">
-                          {selectedStartTime} - {dayjs(selectedStartTime, "HH:mm").add(selectedDuration, "hour").format("HH:mm")} น.
+                          {selectedStartTime} -{" "}
+                          {dayjs(selectedStartTime, "HH:mm")
+                            .add(selectedDuration, "hour")
+                            .format("HH:mm")}{" "}
+                          น.
                         </p>
                         <p className="text-sm text-gray-600 mt-2">
-                          ราคาคอร์ท: <span className="font-semibold text-green-600">{(court.hourly_rate * selectedDuration).toLocaleString()} บาท</span>
+                          ราคาคอร์ท:{" "}
+                          <span className="font-semibold text-green-600">
+                            {(
+                              court.hourly_rate * selectedDuration
+                            ).toLocaleString()}{" "}
+                            บาท
+                          </span>
                         </p>
                       </div>
                     )}
@@ -509,7 +617,9 @@ const BookingForm = () => {
                   size="large"
                   block
                   onClick={handleNext}
-                  disabled={!selectedDate || !selectedStartTime || !selectedDuration}
+                  disabled={
+                    !selectedDate || !selectedStartTime || !selectedDuration
+                  }
                   className="bg-green-600 hover:bg-green-700"
                 >
                   ถัดไป
@@ -520,22 +630,32 @@ const BookingForm = () => {
             {currentStep === 1 && (
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-lg font-semibold mb-4">เลือกอุปกรณ์เสริม (ถ้าต้องการ)</h3>
+                  <h3 className="text-lg font-semibold mb-4">
+                    เลือกอุปกรณ์เสริม (ถ้าต้องการ)
+                  </h3>
                   {equipment.length > 0 ? (
                     <div className="space-y-4">
                       {equipment.map((item) => (
                         <Card key={item.equipment_id} size="small">
                           <div className="flex justify-between items-center">
                             <div>
-                              <p className="font-semibold">{item.equipment_name}</p>
-                              <p className="text-sm text-gray-600">{item.rental_price} บาท/ชิ้น</p>
-                              <p className="text-xs text-gray-500">คงเหลือ: {item.stock} ชิ้น</p>
+                              <p className="font-semibold">
+                                {item.equipment_name}
+                              </p>
+                              <p className="text-sm text-gray-600">
+                                {item.rental_price} บาท/ชิ้น
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                คงเหลือ: {item.stock} ชิ้น
+                              </p>
                             </div>
                             <InputNumber
                               min={0}
                               max={item.stock}
                               defaultValue={0}
-                              onChange={(value) => handleEquipmentChange(item.equipment_id, value)}
+                              onChange={(value) =>
+                                handleEquipmentChange(item.equipment_id, value)
+                              }
                             />
                           </div>
                         </Card>
@@ -547,8 +667,16 @@ const BookingForm = () => {
                 </div>
 
                 <div className="flex gap-4">
-                  <Button size="large" onClick={() => setCurrentStep(0)} block>กลับ</Button>
-                  <Button type="primary" size="large" onClick={handleNext} block className="bg-green-600 hover:bg-green-700">
+                  <Button size="large" onClick={() => setCurrentStep(0)} block>
+                    กลับ
+                  </Button>
+                  <Button
+                    type="primary"
+                    size="large"
+                    onClick={handleNext}
+                    block
+                    className="bg-green-600 hover:bg-green-700"
+                  >
                     ถัดไป
                   </Button>
                 </div>
@@ -559,33 +687,72 @@ const BookingForm = () => {
               <div className="space-y-6">
                 <Card title="สรุปการจอง">
                   <div className="space-y-4">
-                    <div><p className="text-sm text-gray-600">สนาม</p><p className="font-semibold">{venue.venue_name}</p></div>
-                    <div><p className="text-sm text-gray-600">คอร์ท</p><p className="font-semibold">{court.court_name}</p></div>
-                    <div><p className="text-sm text-gray-600">วันที่</p><p className="font-semibold">{selectedDate.format("DD/MM/YYYY")}</p></div>
-                    <div><p className="text-sm text-gray-600">เวลา</p>
+                    <div>
+                      <p className="text-sm text-gray-600">สนาม</p>
+                      <p className="font-semibold">{venue.venue_name}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">คอร์ท</p>
+                      <p className="font-semibold">{court.court_name}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">วันที่</p>
                       <p className="font-semibold">
-                        {selectedStartTime} - {dayjs(selectedStartTime, "HH:mm").add(selectedDuration, "hour").format("HH:mm")} น.
+                        {selectedDate.format("DD/MM/YYYY")}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">เวลา</p>
+                      <p className="font-semibold">
+                        {selectedStartTime} -{" "}
+                        {dayjs(selectedStartTime, "HH:mm")
+                          .add(selectedDuration, "hour")
+                          .format("HH:mm")}{" "}
+                        น.
                       </p>
                     </div>
 
                     <Divider />
 
                     <div>
-                      <p className="text-sm text-gray-600 mb-2">รายการค่าใช้จ่าย</p>
+                      <p className="text-sm text-gray-600 mb-2">
+                        รายการค่าใช้จ่าย
+                      </p>
                       <div className="space-y-2">
                         <div className="flex justify-between">
                           <span>ค่าคอร์ท ({selectedDuration} ชั่วโมง)</span>
-                          <span>{(court.hourly_rate * selectedDuration).toLocaleString()} บาท</span>
+                          <span>
+                            {(
+                              court.hourly_rate * selectedDuration
+                            ).toLocaleString()}{" "}
+                            บาท
+                          </span>
                         </div>
                         {selectedEquipment.length > 0 && (
                           <>
-                            <p className="text-sm text-gray-600 mt-2">อุปกรณ์:</p>
+                            <p className="text-sm text-gray-600 mt-2">
+                              อุปกรณ์:
+                            </p>
                             {selectedEquipment.map((item) => {
-                              const equipmentItem = equipment.find((e) => e.equipment_id === item.equipment_id);
+                              const equipmentItem = equipment.find(
+                                (e) => e.equipment_id === item.equipment_id
+                              );
                               return (
-                                <div key={item.equipment_id} className="flex justify-between">
-                                  <span className="text-sm">{equipmentItem?.equipment_name} x {item.quantity}</span>
-                                  <span className="text-sm">{(equipmentItem?.rental_price * item.quantity).toLocaleString()} บาท</span>
+                                <div
+                                  key={item.equipment_id}
+                                  className="flex justify-between"
+                                >
+                                  <span className="text-sm">
+                                    {equipmentItem?.equipment_name} x{" "}
+                                    {item.quantity}
+                                  </span>
+                                  <span className="text-sm">
+                                    {(
+                                      equipmentItem?.rental_price *
+                                      item.quantity
+                                    ).toLocaleString()}{" "}
+                                    บาท
+                                  </span>
                                 </div>
                               );
                             })}
@@ -598,13 +765,17 @@ const BookingForm = () => {
 
                     <div className="flex justify-between items-center">
                       <span className="text-lg font-bold">ราคารวม</span>
-                      <span className="text-2xl font-bold text-green-600">{totalPrice.toLocaleString()} บาท</span>
+                      <span className="text-2xl font-bold text-green-600">
+                        {totalPrice.toLocaleString()} บาท
+                      </span>
                     </div>
                   </div>
                 </Card>
 
                 <div className="flex gap-4">
-                  <Button size="large" onClick={() => setCurrentStep(1)} block>กลับ</Button>
+                  <Button size="large" onClick={() => setCurrentStep(1)} block>
+                    กลับ
+                  </Button>
                   <Button
                     type="primary"
                     size="large"
@@ -622,29 +793,42 @@ const BookingForm = () => {
         </Card>
       </div>
 
+      {/* Payment Modal with Omise QR Code */}
       <Modal
         open={paymentModalVisible}
         onCancel={() => {
-          Modal.confirm({
+          // เปลี่ยนจาก Modal.confirm เป็น modal.confirm
+          modal.confirm({
             title: "ยกเลิกการชำระเงิน?",
-            content: "หากคุณปิดหน้าต่างนี้ การจองจะถูกยกเลิกเมื่อหมดเวลา 15 นาที",
+            content:
+              "หากคุณปิดหน้าต่างนี้ การจองจะถูกยกเลิกเมื่อหมดเวลา 15 นาที",
             okText: "ปิดหน้าต่าง",
             cancelText: "อยู่ต่อ",
+            okType: "danger", // เพิ่มเพื่อให้เป็นปุ่มแดง
             onOk: () => {
               setPaymentModalVisible(false);
               navigate("/member/my-bookings");
+            },
+            // เพิ่ม onCancel เพื่อไม่ทำอะไรเมื่อกดยกเลิก
+            onCancel: () => {
+              // ไม่ทำอะไร - ให้อยู่ใน modal เดิม
             },
           });
         }}
         footer={null}
         width={600}
-        closable={true}
+        closable={true} // ตรวจสอบว่ามี true
+        maskClosable={false} // เพิ่มเพื่อไม่ให้ปิดเมื่อคลิกนอก Modal
       >
         <div className="text-center py-6">
           <Result
             status="success"
             icon={<QrcodeOutlined style={{ color: "#52c41a" }} />}
-            title={<span className="text-2xl font-bold">สแกน QR Code เพื่อชำระเงิน</span>}
+            title={
+              <span className="text-2xl font-bold">
+                สแกน QR Code เพื่อชำระเงิน
+              </span>
+            }
           />
 
           {paymentDeadline && (
@@ -653,7 +837,11 @@ const BookingForm = () => {
               <Countdown
                 value={paymentDeadline}
                 format="mm:ss"
-                valueStyle={{ color: "#f5222d", fontSize: "32px", fontWeight: "bold" }}
+                valueStyle={{
+                  color: "#f5222d",
+                  fontSize: "32px",
+                  fontWeight: "bold",
+                }}
                 onFinish={() => {
                   messageApi.warning("หมดเวลาชำระเงิน");
                   setPaymentModalVisible(false);
@@ -667,10 +855,16 @@ const BookingForm = () => {
             <div className="space-y-6">
               <div className="flex justify-center">
                 <div className="bg-white p-4 rounded-xl border-4 border-green-500 shadow-lg">
-                  {paymentData.qrCode ? (
-                    <img src={paymentData.qrCode} alt="QR Code" className="w-64 h-64" />
+                  {paymentData.qrCodeUrl ? (
+                    <img
+                      src={paymentData.qrCodeUrl}
+                      alt="Omise QR Code"
+                      className="w-64 h-64 object-contain"
+                    />
                   ) : (
-                    <QRCodeSVG value="https://promptpay.io" size={256} />
+                    <div className="w-64 h-64 flex items-center justify-center">
+                      <Spin size="large" />
+                    </div>
                   )}
                 </div>
               </div>
@@ -679,24 +873,48 @@ const BookingForm = () => {
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">รหัสการจอง</span>
-                    <span className="font-bold text-lg">#{paymentData.bookingId}</span>
+                    <span className="font-bold text-lg">
+                      #{paymentData.bookingId}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">จำนวนเงิน</span>
-                    <span className="font-bold text-2xl text-green-600">{paymentData.totalPrice?.toLocaleString()} บาท</span>
+                    <span className="font-bold text-2xl text-green-600">
+                      {paymentData.totalPrice?.toLocaleString()} บาท
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600 text-sm">Charge ID</span>
+                    <span className="text-xs font-mono text-gray-500">
+                      {paymentData.chargeId}
+                    </span>
                   </div>
                 </div>
               </div>
 
               <div className="text-left bg-blue-50 p-4 rounded-lg">
-                <p className="font-semibold mb-2">📱 วิธีชำระเงิน:</p>
+                <p className="font-semibold mb-2">
+                  📱 วิธีชำระเงินผ่าน PromptPay:
+                </p>
                 <ol className="text-sm text-gray-700 space-y-1 list-decimal list-inside">
-                  <li>เปิดแอพธนาคารของคุณ</li>
-                  <li>เลือกสแกน QR Code</li>
+                  <li>เปิดแอพธนาคารของคุณ (ต้องรองรับ PromptPay)</li>
+                  <li>เลือกเมนู "สแกน QR Code" หรือ "QR Payment"</li>
                   <li>สแกน QR Code ด้านบน</li>
                   <li>ตรวจสอบจำนวนเงินให้ถูกต้อง</li>
                   <li>ยืนยันการชำระเงิน</li>
+                  <li>รอระบบตรวจสอบการชำระเงิน (ประมาณ 5-10 วินาที)</li>
                 </ol>
+              </div>
+
+              <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
+                <p className="text-sm text-yellow-800 flex items-start gap-2">
+                  <ExclamationCircleOutlined className="text-yellow-600 mt-0.5" />
+                  <span>
+                    <strong>สำคัญ:</strong> QR Code นี้ใช้ได้เพียงครั้งเดียว
+                    และหมดอายุใน 15 นาที หากชำระเงินเกินเวลา
+                    ระบบจะยกเลิกการจองอัตโนมัติ
+                  </span>
+                </p>
               </div>
 
               <Button
@@ -707,11 +925,15 @@ const BookingForm = () => {
                 onClick={checkPaymentStatusPeriodically}
                 className="bg-green-600 hover:bg-green-700 h-12"
               >
-                {checkingPayment ? "กำลังตรวจสอบ..." : "ตรวจสอบสถานะการชำระเงิน"}
+                {checkingPayment
+                  ? "กำลังตรวจสอบ..."
+                  : "ตรวจสอบสถานะการชำระเงิน"}
               </Button>
 
               <p className="text-xs text-gray-500 text-center">
                 💡 ระบบจะตรวจสอบสถานะการชำระเงินอัตโนมัติทุก 5 วินาที
+                <br />
+                หากชำระเงินสำเร็จ ระบบจะแจ้งเตือนทันที
               </p>
             </div>
           )}

@@ -15,6 +15,7 @@ import paymentRoutes from './routes/payment.routes.js';
 import reviewRoutes from './routes/review.routes.js';
 import notificationRoutes from './routes/notification.routes.js';
 import uploadRoutes from './routes/upload.routes.js';
+import omiseRoutes from './routes/omise.routes.js'; // เพิ่ม
 
 dotenv.config();
 
@@ -44,7 +45,9 @@ app.get('/api', (req, res) => {
       equipment: '/api/equipment',
       payments: '/api/payments',
       reviews: '/api/reviews',
-      notifications: '/api/notifications'
+      notifications: '/api/notifications',
+      omise: '/api/omise', // เพิ่ม
+      webhooks: '/api/webhooks', // เพิ่ม
     }
   });
 });
@@ -59,6 +62,8 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/omise', omiseRoutes); // เพิ่ม
+app.use('/api/webhooks/omise', omiseRoutes); // เพิ่ม (สำหรับ webhook)
 
 app.use(notFound);
 app.use(errorHandler);
@@ -78,5 +83,6 @@ testConnection().then(() => {
   app.listen(PORT, () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);
     console.log(`📚 API Documentation: http://localhost:${PORT}/api`);
+    console.log(`🔔 Webhook URL: ${process.env.OMISE_WEBHOOK_URL}`);
   });
 });

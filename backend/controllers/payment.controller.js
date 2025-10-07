@@ -271,3 +271,56 @@ export const cancelExpiredPayments = async () => {
     return 0;
   }
 };
+
+export const getPaymentsByBookingId = async (req, res) => {
+  try {
+    const { bookingId } = req.query;
+    const user_id = req.user.user_id;
+    const isAdmin = req.user.role === 'admin' || req.user.role === 'manager';
+
+    let sql = `
+      SELECT 
+        p.*,
+        b.booking_date,
+        b.start_time,
+        b.end_time,
+        u.username,
+        u.email,
+        v.venue_name,
+        c.court_name
+      FROM payments p
+      LEFT JOIN bookings b ON p.booking_id = b.booking_id
+      LEFT JOIN users u ON p.user_id = u.user_id
+      LEFT JOIN venues v ON b.venue_id = v.venue_id
+      LEFT JOIN courts c ON b.court_id = c.court_id
+      WHERE p.booking_id = ?
+    `;
+
+    const params = [bookingId];
+
+    if (!isAdmin) {
+      sql += ' AND p.user_id = ?';
+      params.push(user_id);
+    }
+
+    const payments = await query(sql, params);
+
+    if (payments.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'ไม่พบข้อมูลการชำระเงิน'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: payments
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'เกิดข้อผิดพลาดในการดึงข้อมูลการชำระเงิน',
+      error: error.message
+    });
+  }
+};
