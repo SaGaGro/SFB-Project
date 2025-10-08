@@ -12,7 +12,7 @@ import { logActivity } from '../utils/logger.js';
 
 const router = express.Router();
 
-// User can view and update their own profile (ต้องมาก่อน /:id route)
+// User can view and update their own profile
 router.get('/me', authenticate, async (req, res) => {
   try {
     res.json({

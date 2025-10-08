@@ -16,7 +16,7 @@ export const authenticate = async (req, res, next) => {
     const token = authHeader.substring(7);
     const decoded = verifyToken(token);
     
-    // ดึงข้อมูล user จาก database
+    // ดึงข้อมูล user จาก database (รวม profile_image)
     const users = await query(
       'SELECT user_id, username, email, role, phone, profile_image FROM users WHERE user_id = ?',
       [decoded.userId]
@@ -71,7 +71,7 @@ export const optionalAuth = async (req, res, next) => {
       const decoded = verifyToken(token);
       
       const users = await query(
-        'SELECT user_id, username, email, role FROM users WHERE user_id = ?',
+        'SELECT user_id, username, email, role, profile_image FROM users WHERE user_id = ?',
         [decoded.userId]
       );
       

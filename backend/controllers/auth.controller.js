@@ -73,9 +73,9 @@ export const login = async (req, res) => {
       });
     }
 
-    // ค้นหา user
+    // ค้นหา user (ดึง profile_image ด้วย)
     const users = await query(
-      'SELECT * FROM users WHERE email = ?',
+      'SELECT user_id, username, email, password_hash, phone, role, profile_image FROM users WHERE email = ?',
       [email]
     );
 
@@ -119,7 +119,7 @@ export const login = async (req, res) => {
           email: user.email,
           role: user.role,
           phone: user.phone,
-          profileImage: user.profile_image
+          profile_image: user.profile_image  // ✅ เพิ่มบรรทัดนี้
         }
       }
     });

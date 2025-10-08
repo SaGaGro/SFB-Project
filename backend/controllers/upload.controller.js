@@ -2,7 +2,7 @@ import { query } from '../config/database.js';
 import { deleteFile } from '../config/multer.js';
 import { logActivity } from '../utils/logger.js';
 
-// Upload รูปโปรไฟล์ - แค่อัปโหลดไฟล์ ยังไม่บันทึกลง DB
+// Upload รูปโปรไฟล์ - บันทึกลง DB ทันที
 export const uploadProfile = async (req, res) => {
   try {
     if (!req.file) {
@@ -13,11 +13,20 @@ export const uploadProfile = async (req, res) => {
     }
     
     const imageUrl = `/uploads/profiles/${req.file.filename}`;
+    const userId = req.user.user_id;
     
-    // แค่ return URL กลับไป ไม่บันทึกลง DB
+    // บันทึกลง Database ทันที
+    await query(
+      'UPDATE users SET profile_image = ? WHERE user_id = ?',
+      [imageUrl, userId]
+    );
+    
+    // Log activity
+    await logActivity(userId, 'UPLOAD_PROFILE_IMAGE', 'users', userId);
+    
     res.json({
       success: true,
-      message: 'อัพโหลดไฟล์สำเร็จ (กรุณากดบันทึกการเปลี่ยนแปลงเพื่อบันทึกลงระบบ)',
+      message: 'อัปโหลดรูปโปรไฟล์สำเร็จ',
       data: {
         imageUrl: imageUrl,
         fullUrl: `${process.env.BASE_URL || 'http://localhost:3000'}${imageUrl}`
@@ -26,7 +35,7 @@ export const uploadProfile = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'เกิดข้อผิดพลาดในการอัพโหลดไฟล์',
+      message: 'เกิดข้อผิดพลาดในการอัปโหลดไฟล์',
       error: error.message
     });
   }

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Card, Form, Input, Button, Avatar, Upload, message, Row, Col, Alert } from 'antd';
+import { Card, Form, Input, Button, Avatar, Upload, message, Row, Col } from 'antd';
 import { UserOutlined, MailOutlined, PhoneOutlined, UploadOutlined, SaveOutlined } from '@ant-design/icons';
 import useAuthStore from '../../stores/authStore';
 import api from '../../../services/api';
@@ -9,8 +9,6 @@ const Profile = () => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState(user?.profile_image);
-  const [newImageUrl, setNewImageUrl] = useState(null); // เก็บ URL รูปใหม่ที่ยังไม่ได้บันทึก
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false); // แจ้งเตือนว่ามีการเปลี่ยนแปลง
 
   useEffect(() => {
     form.setFieldsValue({
@@ -20,12 +18,7 @@ const Profile = () => {
     });
   }, [user, form]);
 
-  // ตรวจจับการเปลี่ยนแปลงใน Form
-  const handleFormChange = () => {
-    setHasUnsavedChanges(true);
-  };
-
-  // อัปโหลดรูป - แค่เก็บ URL ไว้ก่อน ยังไม่บันทึกลง DB
+  // อัปโหลดรูป - บันทึกทันที
   const handleAvatarUpload = async (info) => {
     if (info.file.status === 'uploading') {
       setLoading(true);
@@ -37,10 +30,15 @@ const Profile = () => {
       
       if (info.file.response.success) {
         const imageUrl = info.file.response.data.imageUrl;
-        setNewImageUrl(imageUrl); // เก็บ URL ไว้ก่อน ยังไม่บันทึก
-        setAvatarUrl(imageUrl); // แสดงรูปใหม่ให้เห็น (preview)
-        setHasUnsavedChanges(true); // มีการเปลี่ยนแปลงที่ยังไม่ได้บันทึก
-        message.info('เลือกรูปสำเร็จ กรุณากดบันทึกการเปลี่ยนแปลงเพื่อยืนยัน');
+        
+        // บันทึกรูปเลย ไม่ต้องรอกดปุ่ม
+        setAvatarUrl(imageUrl);
+        
+        // อัปเดต user ใน store และ localStorage ทันที
+        const updatedUser = { ...user, profile_image: imageUrl };
+        updateUser(updatedUser);
+        
+        message.success('เปลี่ยนรูปโปรไฟล์สำเร็จ');
       } else {
         message.error('อัปโหลดไม่สำเร็จ');
       }
@@ -52,18 +50,16 @@ const Profile = () => {
     }
   };
 
-  // บันทึกทุกอย่างพร้อมกัน (ชื่อ, เบอร์, รูป)
+  // บันทึกข้อมูล profile (ชื่อ, เบอร์)
   const handleUpdateProfile = async (values) => {
     setLoading(true);
     try {
       console.log('🔄 Updating profile with:', values);
-      console.log('🖼️ New image URL:', newImageUrl);
       
-      // ส่งข้อมูลทั้งหมด รวมถึงรูปใหม่ (ถ้ามี)
+      // ส่งแค่ชื่อกับเบอร์ ไม่ต้องส่งรูป (บันทึกไปแล้วตอน upload)
       const response = await api.put('/users/me', {
         username: values.username,
-        phone: values.phone,
-        profile_image: newImageUrl || avatarUrl // ใช้รูปใหม่ ถ้าไม่มีใช้รูปเดิม
+        phone: values.phone
       });
 
       console.log('✅ Update response:', response);
@@ -71,9 +67,6 @@ const Profile = () => {
       if (response.success) {
         // อัปเดท user ใน store และ localStorage
         updateUser(response.data);
-        setNewImageUrl(null); // เคลียร์รูปใหม่
-        setHasUnsavedChanges(false); // เคลียร์สถานะการเปลี่ยนแปลง
-        setAvatarUrl(response.data.profile_image); // อัปเดตรูปจาก response
         message.success('อัปเดตโปรไฟล์สำเร็จ');
       } else {
         throw new Error(response.message || 'อัปเดตไม่สำเร็จ');
@@ -84,18 +77,6 @@ const Profile = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  // ยกเลิกการเปลี่ยนแปลง
-  const handleCancel = () => {
-    form.setFieldsValue({
-      username: user?.username,
-      phone: user?.phone,
-    });
-    setAvatarUrl(user?.profile_image); // คืนค่ารูปเดิม
-    setNewImageUrl(null); // เคลียร์รูปใหม่
-    setHasUnsavedChanges(false);
-    message.info('ยกเลิกการเปลี่ยนแปลง');
   };
 
   const uploadProps = {
@@ -120,19 +101,6 @@ const Profile = () => {
         </div>
       </div>
 
-      {/* แจ้งเตือนเมื่อมีการเปลี่ยนแปลงที่ยังไม่ได้บันทึก */}
-      {hasUnsavedChanges && (
-        <Alert
-          message="คุณมีการเปลี่ยนแปลงที่ยังไม่ได้บันทึก"
-          description="กรุณากดปุ่ม 'บันทึกการเปลี่ยนแปลง' เพื่อยืนยันการแก้ไข หรือกด 'ยกเลิก' เพื่อคืนค่าเดิม"
-          type="warning"
-          showIcon
-          closable
-          onClose={() => setHasUnsavedChanges(false)}
-          className="rounded-xl"
-        />
-      )}
-
       <Row gutter={[24, 24]}>
         <Col xs={24} lg={8}>
           <Card>
@@ -144,11 +112,6 @@ const Profile = () => {
                   src={avatarUrl ? `${import.meta.env.VITE_BASE_URL}${avatarUrl}` : undefined}
                   className="mb-4 border-4 border-gray-200"
                 />
-                {newImageUrl && (
-                  <div className="absolute top-0 right-0 bg-yellow-400 text-white text-xs px-2 py-1 rounded-full">
-                    ยังไม่บันทึก
-                  </div>
-                )}
               </div>
               <h3 className="text-xl font-bold mb-1">{user?.username}</h3>
               <p className="text-gray-600 mb-4">{user?.email}</p>
@@ -159,14 +122,9 @@ const Profile = () => {
                   loading={loading}
                   disabled={loading}
                 >
-                  {newImageUrl ? 'เลือกรูปอื่น' : 'เปลี่ยนรูปโปรไฟล์'}
+                  เปลี่ยนรูปโปรไฟล์
                 </Button>
               </Upload>
-              {newImageUrl && (
-                <p className="text-xs text-gray-500 mt-2">
-                  * กดบันทึกเพื่อยืนยันการเปลี่ยนรูป
-                </p>
-              )}
             </div>
           </Card>
         </Col>
@@ -177,7 +135,6 @@ const Profile = () => {
               form={form}
               layout="vertical"
               onFinish={handleUpdateProfile}
-              onValuesChange={handleFormChange}
             >
               <Form.Item
                 label="ชื่อผู้ใช้"
@@ -220,29 +177,16 @@ const Profile = () => {
               </Form.Item>
 
               <Form.Item>
-                <div className="flex gap-3">
-                  <Button
-                    type="primary"
-                    htmlType="submit"
-                    loading={loading}
-                    size="large"
-                    icon={<SaveOutlined />}
-                    className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 border-0 font-semibold h-12"
-                  >
-                    บันทึกการเปลี่ยนแปลง
-                  </Button>
-                  
-                  {hasUnsavedChanges && (
-                    <Button
-                      size="large"
-                      onClick={handleCancel}
-                      disabled={loading}
-                      className="h-12"
-                    >
-                      ยกเลิก
-                    </Button>
-                  )}
-                </div>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  loading={loading}
+                  size="large"
+                  icon={<SaveOutlined />}
+                  className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 border-0 font-semibold h-12"
+                >
+                  บันทึกการเปลี่ยนแปลง
+                </Button>
               </Form.Item>
             </Form>
           </Card>
