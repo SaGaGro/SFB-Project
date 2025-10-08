@@ -1,39 +1,30 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { Form, Input, Button, Card, Alert, message } from 'antd';
-import { UserOutlined, LockOutlined } from '@ant-design/icons';
-import useAuthStore from '../../stores/authStore';
-import Navbar from '../../components/common/Navbar';
+import { useEffect } from "react";
+import { useNavigate, Link, useLocation } from "react-router-dom";
+import { Form, Input, Button, Checkbox, Alert } from "antd";
+import {
+  EyeInvisibleOutlined,
+  EyeOutlined,
+} from "@ant-design/icons";
+import { FaDumbbell } from "react-icons/fa6";
+import { FaFacebook, FaGoogle, FaLock } from "react-icons/fa"; // ✅ เพิ่ม FaLock
+import { IoIosMail } from "react-icons/io"; // ✅ เพิ่ม IoIosMail
+import { IoMdExit } from "react-icons/io";
+import { toast } from "react-toastify";
+import useAuthStore from "../../stores/authStore";
+import Navbar from "../../components/common/Navbar";
 
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, isAuthenticated, user, loading, error, clearError } = useAuthStore();
+  const { login, isAuthenticated, user, loading, clearError } = useAuthStore();
 
-  // ดึง redirect path จาก state (ถ้ามี)
   const from = location.state?.from || null;
 
   useEffect(() => {
     if (isAuthenticated && user) {
-      console.log('✅ User authenticated:', user);
-      console.log('🔄 Redirecting based on role:', user.role);
-      
-      // ถ้ามี from ให้ไปหน้าที่ต้องการ
-      if (from) {
-        console.log('🎯 Redirecting to from:', from);
-        navigate(from, { replace: true });
-      } else {
-        // ถ้าไม่มี ให้ไปตาม role
-        if (user.role === 'member') {
-          console.log('🎯 Redirecting to member venues');
-          navigate('/member/venues', { replace: true });
-        } else if (user.role === 'admin' || user.role === 'manager') {
-          console.log('🎯 Redirecting to admin dashboard');
-          navigate('/admin/dashboard', { replace: true });
-        }
-      }
+      console.log("✅ User authenticated:", user);
     }
-  }, [isAuthenticated, user, navigate, from]);
+  }, [isAuthenticated, user]);
 
   useEffect(() => {
     clearError();
@@ -42,133 +33,231 @@ const Login = () => {
   const onFinish = async (values) => {
     try {
       const response = await login(values.email, values.password);
-      console.log('✅ Login response:', response);
-      message.success('เข้าสู่ระบบสำเร็จ');
-      
-      // Force redirect หลัง login สำเร็จ
+      console.log("✅ Login response:", response);
+
       const userData = response.data.user;
-      if (userData.role === 'member') {
-        navigate('/member/venues', { replace: true });
-      } else if (userData.role === 'admin' || userData.role === 'manager') {
-        navigate('/admin/dashboard', { replace: true });
-      }
+
+      toast.success("🎉 เข้าสู่ระบบสำเร็จ! กำลังเข้าสู่หน้าหลัก...", {
+        position: "top-right",
+        autoClose: 1500,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: false,
+        draggable: true,
+      });
+
+      setTimeout(() => {
+        if (from) {
+          navigate(from, { replace: true });
+        } else if (userData.role === "member") {
+          navigate("/member/venues", { replace: true });
+        } else if (userData.role === "admin" || userData.role === "manager") {
+          navigate("/admin/dashboard", { replace: true });
+        }
+      }, 1000);
     } catch (err) {
-      console.error('❌ Login error:', err);
-      message.error(err.message || 'เข้าสู่ระบบไม่สำเร็จ');
+      console.error("❌ Login error:", err);
+      console.log("Error object:", err);
+      console.log("Error message:", err.message);
+      console.log("Error response:", err.response);
+
+      let errorMessage = "เกิดข้อผิดพลาดในการเข้าสู่ระบบ";
+
+      if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err.message) {
+        errorMessage = err.message;
+      } else if (typeof err === "string") {
+        errorMessage = err;
+      }
+
+      toast.error(
+        <div className="p-2">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-lg">❌</span>
+            <strong className="text-base">เข้าสู่ระบบไม่สำเร็จ</strong>
+          </div>
+          <p className="text-sm mb-2">{errorMessage}</p>
+          <div className="text-xs opacity-75 border-t border-red-200 pt-2 mt-2">
+            💡 <strong>คำแนะนำ:</strong>
+            <ul className="list-disc list-inside mt-1 space-y-0.5">
+              <li>ตรวจสอบอีเมลและรหัสผ่านให้ถูกต้อง</li>
+              <li>ตรวจสอบว่าไม่ได้เปิด Caps Lock</li>
+            </ul>
+          </div>
+        </div>,
+        {
+          position: "top-right",
+          autoClose: 1500,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: false,
+          draggable: true,
+          closeButton: true,
+          style: {
+            minWidth: "350px",
+          },
+        }
+      );
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      {/* Navbar */}
       <Navbar />
-      
+
+      {/* Main Content */}
       <div className="container mx-auto px-4 py-12 flex items-center justify-center min-h-[calc(100vh-80px)]">
         <div className="w-full max-w-md">
-          <Card className="shadow-2xl border-0 rounded-2xl overflow-hidden">
-            <div className="text-center mb-8 bg-gradient-to-r from-green-600 to-emerald-600 -mx-6 -mt-6 px-6 py-8 text-white">
-              <div className="text-5xl mb-3">🏟️</div>
-              <h1 className="text-3xl font-bold mb-2">เข้าสู่ระบบ</h1>
-              <p className="text-green-100">ยินดีต้อนรับกลับมา</p>
+          {/* Alert */}
+          {from && (
+            <Alert
+              message="กรุณาเข้าสู่ระบบ"
+              description="คุณต้องเข้าสู่ระบบก่อนเพื่อทำการจองสนาม"
+              type="info"
+              showIcon
+              className="mb-6 rounded-xl"
+            />
+          )}
+
+          {/* Main Card */}
+          <div className="bg-white rounded-3xl shadow-2xl p-8">
+            {/* Icon Header */}
+            <div className="flex justify-center mb-6">
+              <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center shadow-lg">
+                <FaDumbbell className="text-white text-3xl" />
+              </div>
             </div>
 
-            {from && (
-              <Alert
-                message="กรุณาเข้าสู่ระบบ"
-                description="คุณต้องเข้าสู่ระบบก่อนเพื่อทำการจองสนาม"
-                type="info"
-                showIcon
-                className="mb-4 rounded-lg"
-              />
-            )}
+            {/* Title */}
+            <div className="text-center mb-8">
+              <h1 className="!text-3xl !font-bold !text-gray-800 !mb-2">
+                Welcome Back
+              </h1>
+              <p className="text-gray-500 text-sm">
+                Sign in to continue your fitness journey
+              </p>
+            </div>
 
-            {error && (
-              <Alert
-                message={error}
-                type="error"
-                closable
-                onClose={clearError}
-                className="mb-4 rounded-lg"
-              />
-            )}
-
+            {/* Form */}
             <Form
               name="login"
               onFinish={onFinish}
               autoComplete="off"
               layout="vertical"
-              size="large"
+              requiredMark={false}
             >
+              {/* Email - ✅ เปลี่ยน icon */}
               <Form.Item
-                label={<span className="font-semibold">อีเมล</span>}
+                label={
+                  <span className="text-gray-700 font-medium text-sm">
+                    Email Address
+                  </span>
+                }
                 name="email"
                 rules={[
-                  { required: true, message: 'กรุณากรอกอีเมล' },
-                  { type: 'email', message: 'รูปแบบอีเมลไม่ถูกต้อง' }
+                  { required: true, message: "กรุณากรอกอีเมล" },
+                  { type: "email", message: "รูปแบบอีเมลไม่ถูกต้อง" },
                 ]}
               >
-                <Input 
-                  prefix={<UserOutlined className="text-green-600" />} 
-                  placeholder="your@email.com"
-                  className="rounded-lg"
+                <Input
+                  prefix={<IoIosMail className="text-gray-400 text-lg" />}
+                  placeholder="Enter your email"
+                  className="h-12 rounded-xl border-gray-300 hover:border-orange-400 focus:border-orange-500"
                 />
               </Form.Item>
 
+              {/* Password - ✅ เปลี่ยน icon */}
               <Form.Item
-                label={<span className="font-semibold">รหัสผ่าน</span>}
+                label={
+                  <span className="text-gray-700 font-medium text-sm">
+                    Password
+                  </span>
+                }
                 name="password"
-                rules={[{ required: true, message: 'กรุณากรอกรหัสผ่าน' }]}
+                rules={[{ required: true, message: "กรุณากรอกรหัสผ่าน" }]}
               >
                 <Input.Password
-                  prefix={<LockOutlined className="text-green-600" />}
-                  placeholder="รหัสผ่าน"
-                  className="rounded-lg"
+                  prefix={<FaLock className="text-gray-400" />}
+                  placeholder="Enter your password"
+                  iconRender={(visible) =>
+                    visible ? <EyeOutlined /> : <EyeInvisibleOutlined />
+                  }
+                  className="h-12 rounded-xl border-gray-300 hover:border-orange-400 focus:border-orange-500"
                 />
               </Form.Item>
 
-              <div className="flex justify-between items-center mb-6">
-                <Link to="/forgot-password" className="text-green-600 hover:text-green-700 text-sm">
-                  ลืมรหัสผ่าน?
+              {/* Remember Me & Forgot Password */}
+              <div className="flex items-center justify-between mb-6">
+                <Form.Item name="remember" valuePropName="checked" noStyle>
+                  <Checkbox className="text-gray-600 text-sm">
+                    Remember me
+                  </Checkbox>
+                </Form.Item>
+                <Link
+                  to="/forgot-password"
+                  className="!text-orange-500 !hover:text-orange-600 !text-sm !font-medium"
+                >
+                  Forgot password?
                 </Link>
               </div>
 
+              {/* Login Button */}
               <Form.Item>
                 <Button
                   type="primary"
                   htmlType="submit"
                   loading={loading}
-                  className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 border-0 font-semibold h-12 text-lg rounded-full shadow-lg hover:shadow-xl transition-all"
+                  icon={<IoMdExit className="text-lg" />}
+                  className="w-full btn-orange-gradient"
                 >
-                  เข้าสู่ระบบ
+                  Login
                 </Button>
               </Form.Item>
 
-              <div className="text-center pt-4 border-t border-gray-200">
-                <span className="text-gray-600">ยังไม่มีบัญชี? </span>
-                <Link to="/register" className="text-green-600 hover:text-green-700 font-semibold">
-                  ลงทะเบียน
+              {/* Continue with */}
+              <div className="text-center text-gray-400 text-sm mb-4">
+                or Continue with
+              </div>
+
+              {/* Social Login Buttons */}
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                {/* Google */}
+                <Button
+                  className="h-12 rounded-xl border-2 border-gray-200 hover:border-red-400 hover:text-red-500 transition-all"
+                  icon={<FaGoogle className="!text-lg !text-red-500" />}
+                >
+                  <span className="font-medium">Google</span>
+                </Button>
+
+                {/* Facebook */}
+                <Button
+                  className="h-12 rounded-xl border-2 border-gray-200 hover:border-blue-400 hover:text-blue-500 transition-all"
+                  icon={<FaFacebook className="!text-lg !text-blue-600" />}
+                >
+                  <span className="font-medium">Facebook</span>
+                </Button>
+              </div>
+
+              {/* Sign Up Link */}
+              <div className="text-center">
+                <span className="text-gray-600 text-sm">
+                  Don't have an account?{" "}
+                </span>
+                <Link
+                  to="/register"
+                  className="!text-orange-500 !hover:text-orange-600 !font-semibold !text-sm"
+                >
+                  Sign up here
                 </Link>
               </div>
             </Form>
-          </Card>
-
-          {/* <div className="mt-6 text-center">
-            <p className="text-gray-600 mb-3">หรือเข้าชมเว็บไซต์ได้เลย</p>
-            <div className="flex gap-3 justify-center">
-              <Link to="/">
-                <Button className="rounded-full">
-                  🏠 หน้าแรก
-                </Button>
-              </Link>
-              <Link to="/venues">
-                <Button className="rounded-full">
-                  🏟️ ดูสนาม
-                </Button>
-              </Link>
-            </div>
-          </div> */}
+          </div>
         </div>
       </div>
 
+      {/* Footer */}
       <footer className="bg-white border-t border-gray-200 py-6 mt-auto">
         <div className="container mx-auto px-4 text-center text-gray-600">
           <p>© 2025 Sport Booking System - ระบบจองคอร์ทกีฬาออนไลน์</p>

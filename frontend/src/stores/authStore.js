@@ -19,11 +19,12 @@ const useAuthStore = create((set) => ({
       });
       return response;
     } catch (error) {
-      console.error('🔐 Login failed:', error);
+      console.error('🔐 Login failed in store:', error);
       set({ 
         error: error.message || 'เกิดข้อผิดพลาด', 
         loading: false 
       });
+      // ✅ Throw error ต่อให้ component จัดการ
       throw error;
     }
   },

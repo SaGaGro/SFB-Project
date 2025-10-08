@@ -322,7 +322,7 @@ const Home = () => {
               <h4 className="text-lg font-bold text-white mb-4">ติดต่อเรา</h4>
               <ul className="space-y-2 text-gray-400">
                 <li className="flex items-center gap-2">
-                  <MailOutlined /> info@sportbooking.com
+                  <MailOutlined /> kunatip.uto@spumail.net
                 </li>
                 <li className="flex items-center gap-2">
                   <PhoneOutlined /> 02-XXX-XXXX

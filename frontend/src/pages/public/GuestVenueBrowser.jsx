@@ -157,19 +157,19 @@ const GuestVenueBrowser = () => {
               {/* Stats */}
               <div className="flex justify-center gap-6 flex-wrap">
                 <div className="bg-white bg-opacity-20 backdrop-blur-md border border-white border-opacity-30 px-6 py-3 rounded-full">
-                  <span className="text-white text-lg">
+                  <span className="text-black text-lg">
                     <TrophyOutlined className="mr-2" />
                     <span className="font-bold text-2xl">{venues.length}</span> สนามทั้งหมด
                   </span>
                 </div>
                 <div className="bg-white bg-opacity-20 backdrop-blur-md border border-white border-opacity-30 px-6 py-3 rounded-full">
-                  <span className="text-white text-lg">
+                  <span className="text-black text-lg">
                     <CrownOutlined className="mr-2" />
                     สนามมาตรฐาน
                   </span>
                 </div>
                 <div className="bg-white bg-opacity-20 backdrop-blur-md border border-white border-opacity-30 px-6 py-3 rounded-full">
-                  <span className="text-white text-lg">
+                  <span className="text-black text-lg">
                     <ThunderboltOutlined className="mr-2" />
                     อุปกรณ์ครบครัน
                   </span>

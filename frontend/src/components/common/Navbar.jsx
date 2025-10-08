@@ -94,7 +94,7 @@ const Navbar = () => {
     location.pathname === "/login" || location.pathname === "/register";
 
   return (
-    <nav className="bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 shadow-lg sticky top-0 z-50">
+    <nav className="bg-gradient-to-r from-orange-600 via-orange-600 to-orange-600 shadow-lg sticky top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-20">
           {/* Logo - Redirect ตาม role */}

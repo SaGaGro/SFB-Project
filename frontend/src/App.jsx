@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ConfigProvider } from 'antd';
 import thTH from 'antd/locale/th_TH';
+import { ToastContainer } from 'react-toastify'; // ✅ Import
 
 import Home from './pages/public/Home';
 import GuestVenueBrowser from './pages/public/GuestVenueBrowser';
@@ -80,6 +81,21 @@ function App() {
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        
+        {/* ✅ เพิ่ม ToastContainer */}
+        <ToastContainer
+          position="top-right"
+          autoClose={4000}
+          hideProgressBar={false}
+          newestOnTop={true}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="light"
+          style={{ zIndex: 99999 }}
+        />
       </BrowserRouter>
     </ConfigProvider>
   );
@@ -99,11 +115,9 @@ function RoleBasedRedirect() {
   return <Navigate to="/admin/dashboard" replace />;
 }
 
-// Component สำหรับ redirect หน้า Home
 function HomeRedirect() {
   const { user, isAuthenticated } = useAuthStore();
   
-  // ถ้าล็อกอินแล้ว redirect ตาม role
   if (isAuthenticated && user) {
     if (user.role === 'member') {
       return <Navigate to="/member/venues" replace />;
@@ -112,7 +126,6 @@ function HomeRedirect() {
     }
   }
   
-  // ถ้ายังไม่ล็อกอิน แสดงหน้า Home ปกติ
   return <Home />;
 }
 
