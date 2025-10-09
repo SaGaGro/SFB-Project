@@ -1,8 +1,14 @@
-import { Link } from 'react-router-dom';
-import { Button, Card, Row, Col } from 'antd';
-import { 
-  ThunderboltOutlined, 
-  CreditCardOutlined, 
+import { Link } from "react-router-dom";
+import { Button, Card, Row, Col } from "antd";
+import bgImage from "../../assets/img/4.png";
+import badmintom from "../../assets/img/badmintonHome.jpg";
+import football from "../../assets/img/footbalHome.jpg";
+import basketball from "../../assets/img/basketballHome.jpg";
+import other from "../../assets/img/other.jpg";
+import logo from "../../assets/logo/logo2.svg";
+import {
+  ThunderboltOutlined,
+  CreditCardOutlined,
   TrophyOutlined,
   SafetyOutlined,
   ClockCircleOutlined,
@@ -12,137 +18,147 @@ import {
   CalendarOutlined,
   UserOutlined,
   MailOutlined,
-  PhoneOutlined
-} from '@ant-design/icons';
-import Navbar from '../../components/common/Navbar';
+  PhoneOutlined,
+} from "@ant-design/icons";
+import Navbar from "../../components/common/Navbar";
 
 const Home = () => {
   const features = [
     {
-      icon: <EnvironmentOutlined className="text-5xl text-green-600" />,
-      title: 'หลายสาขา',
-      description: 'เรามีสนามกีฬาหลายสาขาให้คุณเลือกตามความสะดวก',
-      gradient: 'from-green-50 to-emerald-50'
+      icon: <EnvironmentOutlined className="text-5xl text-orange-600" />,
+      title: "หลายสาขา",
+      description: "เรามีสนามกีฬาหลายสาขาให้คุณเลือกตามความสะดวก",
+      gradient: "from-orange-50 to-amber-50",
     },
     {
-      icon: <ThunderboltOutlined className="text-5xl text-green-600" />,
-      title: 'จองง่าย รวดเร็ว',
-      description: 'จองคอร์ทได้ภายในไม่กี่นาที ผ่านระบบออนไลน์',
-      gradient: 'from-emerald-50 to-teal-50'
+      icon: <ThunderboltOutlined className="text-5xl text-orange-600" />,
+      title: "จองง่าย รวดเร็ว",
+      description: "จองคอร์ทได้ภายในไม่กี่นาที ผ่านระบบออนไลน์",
+      gradient: "from-amber-50 to-yellow-50",
     },
     {
-      icon: <CreditCardOutlined className="text-5xl text-green-600" />,
-      title: 'ชำระเงินสะดวก',
-      description: 'รองรับ QR Code PromptPay และช่องทางอื่นๆ',
-      gradient: 'from-teal-50 to-cyan-50'
+      icon: <CreditCardOutlined className="text-5xl text-orange-600" />,
+      title: "ชำระเงินสะดวก",
+      description: "รองรับ QR Code PromptPay และช่องทางอื่นๆ",
+      gradient: "from-yellow-50 to-orange-50",
     },
     {
-      icon: <TrophyOutlined className="text-5xl text-green-600" />,
-      title: 'สนามมาตรฐาน',
-      description: 'สนามคุณภาพ พร้อมอุปกรณ์กีฬาครบครัน',
-      gradient: 'from-cyan-50 to-blue-50'
+      icon: <TrophyOutlined className="text-5xl text-orange-600" />,
+      title: "สนามมาตรฐาน",
+      description: "สนามคุณภาพ พร้อมอุปกรณ์กีฬาครบครัน",
+      gradient: "from-orange-50 to-red-50",
     },
     {
-      icon: <SafetyOutlined className="text-5xl text-green-600" />,
-      title: 'ปลอดภัย มั่นใจ',
-      description: 'ระบบจองปลอดภัย มีการยืนยันทุกครั้ง',
-      gradient: 'from-blue-50 to-indigo-50'
+      icon: <SafetyOutlined className="text-5xl text-orange-600" />,
+      title: "ปลอดภัย มั่นใจ",
+      description: "ระบบจองปลอดภัย มีการยืนยันทุกครั้ง",
+      gradient: "from-red-50 to-orange-50",
     },
     {
-      icon: <ClockCircleOutlined className="text-5xl text-green-600" />,
-      title: 'เปิดบริการทุกวัน',
-      description: 'จองได้ตลอด 24 ชั่วโมง ผ่านเว็บไซต์',
-      gradient: 'from-indigo-50 to-purple-50'
+      icon: <ClockCircleOutlined className="text-5xl text-orange-600" />,
+      title: "เปิดบริการทุกวัน",
+      description: "จองได้ตลอด 24 ชั่วโมง ผ่านเว็บไซต์",
+      gradient: "from-amber-50 to-orange-50",
     },
   ];
 
   const sportTypes = [
     {
-      icon: <TrophyOutlined className="text-7xl" />,
-      name: 'แบดมินตัน',
-      description: 'สนามมาตรฐาน พื้นไม้คุณภาพ',
-      color: 'from-orange-400 to-amber-500'
+      image: badmintom,
+      name: "แบดมินตัน",
+      description: "สนามมาตรฐาน พื้นไม้คุณภาพ",
+      color: "from-orange-400 to-amber-500",
     },
     {
-      icon: <TrophyOutlined className="text-7xl" />,
-      name: 'ฟุตซอล',
-      description: 'พื้นหญ้าเทียม เกรดพรีเมียม',
-      color: 'from-green-400 to-emerald-500'
+      image: football,
+      name: "ฟุตซอล",
+      description: "พื้นหญ้าเทียม เกรดพรีเมียม",
+      color: "from-amber-400 to-yellow-500",
     },
     {
-      icon: <TrophyOutlined className="text-7xl" />,
-      name: 'บาสเกตบอล',
-      description: 'สนามกลางแจ้ง และในร่ม',
-      color: 'from-red-400 to-orange-500'
+      image: basketball,
+      name: "บาสเกตบอล",
+      description: "สนามกลางแจ้ง และในร่ม",
+      color: "from-red-400 to-orange-500",
     },
     {
-      icon: <TrophyOutlined className="text-7xl" />,
-      name: 'กีฬาอื่นๆ',
-      description: 'เทนนิส วอลเลย์บอล',
-      color: 'from-blue-400 to-cyan-500'
+      image: other,
+      name: "กีฬาอื่นๆ",
+      description: "เทนนิส วอลเลย์บอล",
+      color: "from-orange-500 to-red-400",
     },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50">
       <Navbar />
-      
+
       {/* Hero Section */}
-      <div className="relative bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 text-white overflow-hidden">
-        <div className="absolute inset-0 bg-black opacity-10"></div>
-        <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full opacity-10 -mr-48 -mt-48 blur-3xl"></div>
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-white rounded-full opacity-10 -ml-48 -mb-48 blur-3xl"></div>
-        <div className="absolute top-1/2 left-1/4 w-64 h-64 bg-white rounded-full opacity-5 blur-3xl"></div>
-        
+      <div className="relative bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500 text-white overflow-hidden">
+        {/* Background Image */}
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{
+            backgroundImage: `url(${bgImage})`,
+          }}
+        >
+          {/* เพิ่มความเข้มของ overlay */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-black/10 to-black/20"></div>
+        </div>
+
+        {/* Decorative Elements */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-orange-300 rounded-full opacity-10 -mr-48 -mt-48 blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-amber-300 rounded-full opacity-10 -ml-48 -mb-48 blur-3xl"></div>
+        <div className="absolute top-1/2 left-1/4 w-64 h-64 bg-yellow-300 rounded-full opacity-10 blur-3xl"></div>
+
         <div className="container mx-auto px-4 py-24 relative z-10">
           <div className="max-w-4xl mx-auto text-center">
             <div className="mb-6 animate-fade-in">
-              <span className="inline-block bg-teal-600 bg-opacity-20 backdrop-blur-sm px-6 py-2 rounded-full text-sm font-semibold mb-4 border border-teal border-opacity-30">
+              <span className="inline-block bg-white/20 backdrop-blur-md px-6 py-2 rounded-full text-sm font-semibold mb-4 border border-white/30 shadow-lg">
                 <TrophyOutlined className="mr-2" />
                 ระบบจองคอร์ทออนไลน์ที่ดีที่สุด
               </span>
             </div>
-            
-            <h1 className="text-6xl md:text-7xl font-bold mb-6 drop-shadow-2xl">
+
+            <h1 className="text-6xl md:text-7xl font-bold mb-6 text-white">
               จองคอร์ทกีฬา
             </h1>
-            <p className="text-2xl md:text-3xl mb-4 opacity-95 font-light">
+            <p className="text-2xl md:text-3xl mb-4 font-light text-white">
               สนามกีฬาคุณภาพ หลายสาขาทั่วกรุงเทพ
             </p>
-            <p className="text-lg md:text-xl mb-10 opacity-90 flex items-center justify-center gap-4 flex-wrap">
-              <span className="flex items-center gap-2">
+            <p className="text-lg md:text-xl mb-10 flex items-center justify-center gap-4 flex-wrap">
+              <span className="flex items-center gap-2 bg-black/20 backdrop-blur-sm px-3 py-1 rounded-full">
                 <TrophyOutlined /> แบดมินตัน
               </span>
               <span>|</span>
-              <span className="flex items-center gap-2">
+              <span className="flex items-center gap-2 bg-black/20 backdrop-blur-sm px-3 py-1 rounded-full">
                 <TrophyOutlined /> ฟุตซอล
               </span>
               <span>|</span>
-              <span className="flex items-center gap-2">
+              <span className="flex items-center gap-2 bg-black/20 backdrop-blur-sm px-3 py-1 rounded-full">
                 <TrophyOutlined /> บาสเกตบอล
               </span>
               <span>|</span>
-              <span className="flex items-center gap-2">
+              <span className="flex items-center gap-2 bg-black/20 backdrop-blur-sm px-3 py-1 rounded-full">
                 <TrophyOutlined /> และอื่นๆ
               </span>
             </p>
-            
+
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/venues">
-                <Button 
-                  type="primary" 
-                  size="large" 
+                <Button
+                  size="large"
                   icon={<EnvironmentOutlined />}
-                  className="bg-white text-green-600 hover:bg-green-50 border-0 font-semibold h-14 px-10 rounded-full shadow-2xl hover:shadow-green-200 hover:scale-105 transition-all text-lg"
+                  className="bg-white text-orange-600 hover:bg-orange-50 border-0 font-semibold h-14 px-10 rounded-full shadow-2xl hover:shadow-orange-200 hover:scale-105 transition-all text-lg"
                 >
                   ดูสนามทั้งหมด
                 </Button>
               </Link>
               <Link to="/register">
-                <Button 
+                <Button
                   size="large"
                   icon={<UserOutlined />}
-                  className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-green-600 font-semibold h-14 px-10 rounded-full hover:scale-105 transition-all text-lg"
+                  className="bg-white/10 backdrop-blur-md border-2 border-white text-white hover:bg-white hover:text-orange-600 font-semibold h-14 px-10 rounded-full hover:scale-105 transition-all text-lg shadow-xl"
                 >
                   สมัครสมาชิก
                 </Button>
@@ -151,33 +167,42 @@ const Home = () => {
 
             {/* Stats */}
             <div className="grid grid-cols-3 gap-6 max-w-2xl mx-auto mt-16">
-              <div className="text-center">
+              <div className="text-center bg-white/15 backdrop-blur-md rounded-xl p-4 border border-white/30 shadow-xl">
                 <p className="text-4xl font-bold mb-1">10+</p>
-                <p className="text-sm opacity-90">สาขาทั่วกรุงเทพ</p>
+                <p className="text-sm">สาขาทั่วกรุงเทพ</p>
               </div>
-              <div className="text-center">
+              <div className="text-center bg-white/15 backdrop-blur-md rounded-xl p-4 border border-white/30 shadow-xl">
                 <p className="text-4xl font-bold mb-1">50+</p>
-                <p className="text-sm opacity-90">คอร์ทให้เลือก</p>
+                <p className="text-sm">คอร์ทให้เลือก</p>
               </div>
-              <div className="text-center">
+              <div className="text-center bg-white/15 backdrop-blur-md rounded-xl p-4 border border-white/30 shadow-xl">
                 <p className="text-4xl font-bold mb-1">1000+</p>
-                <p className="text-sm opacity-90">ลูกค้าพึงพอใจ</p>
+                <p className="text-sm">ลูกค้าพึงพอใจ</p>
               </div>
             </div>
           </div>
         </div>
-        
+
         {/* Wave Shape */}
         <div className="absolute bottom-0 left-0 right-0">
-          <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M0 120L60 105C120 90 240 60 360 45C480 30 600 30 720 37.5C840 45 960 60 1080 67.5C1200 75 1320 75 1380 75L1440 75V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0V120Z" 
-                  fill="url(#gradient)" fillOpacity="0.3"/>
-            <path d="M0 120L60 112.5C120 105 240 90 360 82.5C480 75 600 75 720 78.75C840 82.5 960 90 1080 93.75C1200 97.5 1320 97.5 1380 97.5L1440 97.5V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0V120Z" 
-                  fill="#f0fdf4"/>
+          <svg
+            viewBox="0 0 1440 120"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M0 120L60 105C120 90 240 60 360 45C480 30 600 30 720 37.5C840 45 960 60 1080 67.5C1200 75 1320 75 1380 75L1440 75V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0V120Z"
+              fill="url(#gradient)"
+              fillOpacity="0.3"
+            />
+            <path
+              d="M0 120L60 112.5C120 105 240 90 360 82.5C480 75 600 75 720 78.75C840 82.5 960 90 1080 93.75C1200 97.5 1320 97.5 1380 97.5L1440 97.5V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0V120Z"
+              fill="#fff7ed"
+            />
             <defs>
               <linearGradient id="gradient" x1="0" y1="0" x2="1440" y2="0">
-                <stop offset="0%" stopColor="#f0fdf4"/>
-                <stop offset="100%" stopColor="#ecfdf5"/>
+                <stop offset="0%" stopColor="#fff7ed" />
+                <stop offset="100%" stopColor="#fffbeb" />
               </linearGradient>
             </defs>
           </svg>
@@ -190,21 +215,23 @@ const Home = () => {
           <h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
             ประเภทกีฬาที่เปิดให้บริการ
           </h2>
-          <p className="text-gray-600 text-lg">
-            เลือกกีฬาที่คุณชื่นชอบ
-          </p>
+          <p className="text-gray-600 text-lg">เลือกกีฬาที่คุณชื่นชอบ</p>
         </div>
 
         <Row gutter={[24, 24]} className="mb-12">
           {sportTypes.map((sport, index) => (
             <Col xs={24} sm={12} lg={6} key={index}>
-              <Card 
+              <Card
                 className="text-center h-full border-0 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 rounded-2xl overflow-hidden cursor-pointer"
-                onClick={() => window.location.href = '/venues'}
+                onClick={() => (window.location.href = "/venues")}
               >
-                <div className={`bg-gradient-to-br ${sport.color} -mx-6 -mt-6 mb-6 py-8 relative overflow-hidden`}>
-                  <div className="absolute inset-0 bg-white opacity-10"></div>
-                  <div className="relative z-10 drop-shadow-lg text-white">{sport.icon}</div>
+                <div className="bg-gradient-to-br ${sport.color} -mx-6 -mt-6 mb-6 relative overflow-hidden aspect-square">
+                  <img
+                    src={sport.image}
+                    alt={sport.name}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
                 </div>
                 <h3 className="text-2xl font-bold mb-3 text-gray-800">
                   {sport.name}
@@ -217,11 +244,10 @@ const Home = () => {
 
         <div className="text-center">
           <Link to="/venues">
-            <Button 
-              size="large" 
-              type="primary"
+            <Button
+              size="large"
               icon={<CalendarOutlined />}
-              className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 border-0 h-14 px-10 rounded-full shadow-lg hover:shadow-xl transition-all font-semibold text-lg"
+              className="btn-view-venues"
             >
               ดูสนามทั้งหมด
             </Button>
@@ -244,9 +270,9 @@ const Home = () => {
           <Row gutter={[24, 24]}>
             {features.map((feature, index) => (
               <Col xs={24} sm={12} lg={8} key={index}>
-                <Card 
+                <Card
                   className={`text-center h-full hover:shadow-2xl transition-all duration-300 border-0 shadow-lg rounded-2xl overflow-hidden transform hover:-translate-y-2 bg-gradient-to-br ${feature.gradient}`}
-                  bodyStyle={{ padding: '2.5rem' }}
+                  bodyStyle={{ padding: "2.5rem" }}
                 >
                   <div className="mb-6 transform hover:scale-110 transition-transform duration-300">
                     {feature.icon}
@@ -254,7 +280,9 @@ const Home = () => {
                   <h3 className="text-2xl font-bold mb-4 text-gray-800">
                     {feature.title}
                   </h3>
-                  <p className="text-gray-700 leading-relaxed">{feature.description}</p>
+                  <p className="text-gray-700 leading-relaxed">
+                    {feature.description}
+                  </p>
                 </Card>
               </Col>
             ))}
@@ -263,27 +291,27 @@ const Home = () => {
       </div>
 
       {/* CTA Section */}
-      <div className="relative bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 text-white py-20 overflow-hidden">
+      <div className="relative bg-gradient-to-r from-orange-600 via-amber-600 to-yellow-600 text-white py-20 overflow-hidden">
         <div className="absolute inset-0 bg-black opacity-10"></div>
         <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full opacity-5 -mr-48 -mt-48 blur-3xl"></div>
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-white rounded-full opacity-5 -ml-48 -mb-48 blur-3xl"></div>
-        
+
         <div className="container mx-auto px-4 text-center relative z-10">
           <div className="max-w-3xl mx-auto">
             <h2 className="text-4xl md:text-5xl font-bold mb-6 drop-shadow-lg">
               พร้อมจองแล้วหรือยัง
-              </h2>
+            </h2>
             <p className="text-xl md:text-2xl mb-8 opacity-95">
               สมัครสมาชิกวันนี้ จองคอร์ทได้ทันที
             </p>
             <p className="text-lg mb-10 opacity-90">
-              ✓ ไม่มีค่าสมัคร  ✓ จองง่ายในไม่กี่คลิก  ✓ ยกเลิกได้ฟรี
+              ✓ ไม่มีค่าสมัคร ✓ จองง่ายในไม่กี่คลิก ✓ ยกเลิกได้ฟรี
             </p>
             <Link to="/register">
-              <Button 
+              <Button
                 size="large"
                 icon={<UserOutlined />}
-                className="bg-white text-green-600 hover:bg-green-50 border-0 font-semibold h-14 px-10 rounded-full shadow-2xl hover:scale-105 transition-all text-lg"
+                className="bg-white text-orange-600 hover:bg-orange-50 border-0 font-semibold h-14 px-10 rounded-full shadow-2xl hover:scale-105 transition-all text-lg"
               >
                 สมัครสมาชิกเลย
               </Button>
@@ -298,24 +326,46 @@ const Home = () => {
           <Row gutter={[48, 48]}>
             <Col xs={24} md={8}>
               <div className="flex items-center space-x-3 mb-4">
-                <div className="bg-gradient-to-r from-green-600 to-emerald-600 p-2 rounded-xl">
-                  <ShopOutlined className="text-3xl text-white" />
-                </div>
+                <img src={logo} alt="Logo" className="h-full max-h-[60px] object-contain" />
                 <div>
-                  <h3 className="text-xl font-bold text-white">SPORT BOOKING</h3>
+                  <h3 className="text-xl font-bold text-white">
+                    SPORT BOOKING
+                  </h3>
                   <p className="text-sm text-gray-400">ระบบจองคอร์ทกีฬา</p>
                 </div>
               </div>
               <p className="text-gray-400 leading-relaxed">
-                ระบบจองคอร์ทกีฬาออนไลน์ที่ดีที่สุด ให้บริการสนามกีฬาคุณภาพ หลายสาขาทั่วกรุงเทพ
+                ระบบจองคอร์ทกีฬาออนไลน์ที่ดีที่สุด ให้บริการสนามกีฬาคุณภาพ
+                หลายสาขาทั่วกรุงเทพ
               </p>
             </Col>
             <Col xs={24} md={8}>
               <h4 className="text-lg font-bold text-white mb-4">เมนูลัด</h4>
               <ul className="space-y-2">
-                <li><Link to="/venues" className="text-gray-400 hover:text-green-400 transition-colors">ดูสนามทั้งหมด</Link></li>
-                <li><Link to="/register" className="text-gray-400 hover:text-green-400 transition-colors">สมัครสมาชิก</Link></li>
-                <li><Link to="/login" className="text-gray-400 hover:text-green-400 transition-colors">เข้าสู่ระบบ</Link></li>
+                <li>
+                  <Link
+                    to="/venues"
+                    className="text-gray-400 hover:text-orange-400 transition-colors"
+                  >
+                    ดูสนามทั้งหมด
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/register"
+                    className="text-gray-400 hover:text-orange-400 transition-colors"
+                  >
+                    สมัครสมาชิก
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/login"
+                    className="text-gray-400 hover:text-orange-400 transition-colors"
+                  >
+                    เข้าสู่ระบบ
+                  </Link>
+                </li>
               </ul>
             </Col>
             <Col xs={24} md={8}>

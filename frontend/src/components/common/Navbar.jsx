@@ -1,5 +1,6 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button, Dropdown, Avatar } from "antd";
+import logo from "../../assets/logo/logo2.svg";
 import {
   UserOutlined,
   LogoutOutlined,
@@ -102,12 +103,14 @@ const Navbar = () => {
             to={getLogoPath()}
             className="flex items-center space-x-3 group"
           >
-            <div className="bg-white p-2 rounded-xl shadow-md group-hover:shadow-lg transition-shadow">
-              <ShopOutlined className="text-3xl text-green-600" />
-            </div>
+            <img
+              src={logo}
+              alt="Ignite Pro Logo"
+              className="h-full max-h-[60px] object-contain"
+            />
             <div>
               <span className="text-2xl font-bold text-white drop-shadow-md">
-                SPORT BOOKING
+                Ignite Pro
               </span>
               <p className="text-xs text-green-100">ระบบจองคอร์ทกีฬาออนไลน์</p>
             </div>
@@ -205,8 +208,10 @@ const Navbar = () => {
                     </Button>
                   </Link>
                   <Link to="/register">
-                    <Button className="border-2 border-white text-white !hover:bg-white !hover:text-black font-semibold h-10 px-6 rounded-full"
-                      ghost>
+                    <Button
+                      className="border-2 border-white text-white !hover:bg-white !hover:text-black font-semibold h-10 px-6 rounded-full"
+                      ghost
+                    >
                       สมัครสมาชิก
                     </Button>
                   </Link>
