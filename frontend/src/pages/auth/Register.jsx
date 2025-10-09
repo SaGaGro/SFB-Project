@@ -124,7 +124,7 @@ const Register = () => {
       }, 2000);
       
     } catch (err) {
-      console.error('❌ Register error:', err);
+      console.error('❌ ข้อผิดพลาดในการลงทะเบียน:', err);
       
       let errorMessage = 'ลงทะเบียนไม่สำเร็จ';
       
@@ -184,8 +184,8 @@ const Register = () => {
 
             {/* Title */}
             <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-gray-800 mb-2">Join SportsFit</h1>
-              <p className="text-gray-500 text-sm">Start your fitness journey today</p>
+              <h1 className="text-3xl font-bold text-gray-800 mb-2">สมัครสมาชิก</h1>
+              <p className="text-gray-500 text-sm">เริ่มต้นการจองสนามกีฬาวันนี้</p>
             </div>
 
             {/* Form */}
@@ -194,14 +194,14 @@ const Register = () => {
               <div>
                 <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
                   <FiUser className="mr-2 text-gray-400" />
-                  Full Name
+                  ชื่อ-นามสกุล
                 </label>
                 <input
                   type="text"
                   name="username"
                   value={formData.username}
                   onChange={handleChange}
-                  placeholder="Enter your full name"
+                  placeholder="กรอกชื่อ-นามสกุลของคุณ"
                   className={`w-full px-4 py-3 border ${errors.username ? 'border-red-500' : 'border-gray-300'} rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent hover:border-orange-400 transition-all h-12`}
                 />
                 {errors.username && (
@@ -213,14 +213,14 @@ const Register = () => {
               <div>
                 <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
                   <FiMail className="mr-2 text-gray-400" />
-                  Email Address
+                  อีเมล
                 </label>
                 <input
                   type="email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  placeholder="Enter your email"
+                  placeholder="กรอกอีเมลของคุณ"
                   className={`w-full px-4 py-3 border ${errors.email ? 'border-red-500' : 'border-gray-300'} rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent hover:border-orange-400 transition-all h-12`}
                 />
                 {errors.email && (
@@ -232,7 +232,7 @@ const Register = () => {
               <div>
                 <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
                   <FiPhone className="mr-2 text-gray-400" />
-                  Phone Number
+                  เบอร์โทรศัพท์
                 </label>
                 <input
                   type="tel"
@@ -252,14 +252,14 @@ const Register = () => {
               <div>
                 <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
                   <FiLock className="mr-2 text-gray-400" />
-                  Password
+                  รหัสผ่าน
                 </label>
                 <input
                   type="password"
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  placeholder="Create a strong password"
+                  placeholder="สร้างรหัสผ่านที่แข็งแรง"
                   className={`w-full px-4 py-3 border ${errors.password ? 'border-red-500' : 'border-gray-300'} rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent hover:border-orange-400 transition-all h-12`}
                 />
                 {errors.password && (
@@ -271,14 +271,14 @@ const Register = () => {
               <div>
                 <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
                   <FiLock className="mr-2 text-gray-400" />
-                  Confirm Password
+                  ยืนยันรหัสผ่าน
                 </label>
                 <input
                   type="password"
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  placeholder="Confirm your password"
+                  placeholder="ยืนยันรหัสผ่านของคุณ"
                   className={`w-full px-4 py-3 border ${errors.confirmPassword ? 'border-red-500' : 'border-gray-300'} rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent hover:border-orange-400 transition-all h-12`}
                 />
                 {errors.confirmPassword && (
@@ -296,13 +296,13 @@ const Register = () => {
                   className="mt-1 h-4 w-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500 cursor-pointer"
                 />
                 <label className="ml-2 text-sm text-gray-600">
-                  I agree to the{' '}
+                  ฉันยอมรับ{' '}
                   <Link to="/terms" className="text-orange-500 hover:text-orange-600 font-medium">
-                    Terms of Service
+                    ข้อกำหนดการให้บริการ
                   </Link>
-                  {' '}and{' '}
+                  {' '}และ{' '}
                   <Link to="/privacy" className="text-orange-500 hover:text-orange-600 font-medium">
-                    Privacy Policy
+                    นโยบายความเป็นส่วนตัว
                   </Link>
                 </label>
               </div>
@@ -327,16 +327,16 @@ const Register = () => {
                 ) : (
                   <>
                     <FiCheckCircle className="mr-2 text-lg" />
-                    Register Now
+                    ลงทะเบียน
                   </>
                 )}
               </button>
 
               {/* Sign In Link */}
               <div className="text-center pt-4">
-                <span className="text-gray-600 text-sm">Already have an account? </span>
+                <span className="text-gray-600 text-sm">มีบัญชีอยู่แล้ว? </span>
                 <Link to="/login" className="text-orange-500 hover:text-orange-600 font-semibold text-sm">
-                  Sign in here
+                  เข้าสู่ระบบที่นี่
                 </Link>
               </div>
             </form>
@@ -346,15 +346,15 @@ const Register = () => {
           <div className="grid grid-cols-3 gap-4 mt-8 text-center">
             <div>
               <div className="text-2xl font-bold text-orange-500">50K+</div>
-              <div className="text-xs text-gray-600">Active Members</div>
+              <div className="text-xs text-gray-600">สมาชิกที่ใช้งาน</div>
             </div>
             <div>
               <div className="text-2xl font-bold text-orange-500">100+</div>
-              <div className="text-xs text-gray-600">Workout Plans</div>
+              <div className="text-xs text-gray-600">แผนการออกกำลังกาย</div>
             </div>
             <div>
               <div className="text-2xl font-bold text-orange-500">24/7</div>
-              <div className="text-xs text-gray-600">Support</div>
+              <div className="text-xs text-gray-600">บริการสนับสนุน</div>
             </div>
           </div> */}
         </div>
@@ -363,7 +363,7 @@ const Register = () => {
       {/* Footer */}
       <footer className="bg-white border-t border-gray-200 py-6 mt-auto">
         <div className="container mx-auto px-4 text-center text-gray-600">
-          <p>© 2025 Sport Booking System - ระบบจองคอร์ทกีฬาออนไลน์</p>
+          <p>© 2025 ระบบจองสนามกีฬา - ระบบจองคอร์ทกีฬาออนไลน์</p>
         </div>
       </footer>
     </div>

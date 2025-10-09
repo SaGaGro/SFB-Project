@@ -6,8 +6,8 @@ import {
   EyeOutlined,
 } from "@ant-design/icons";
 import { FaDumbbell } from "react-icons/fa6";
-import { FaFacebook, FaGoogle, FaLock } from "react-icons/fa"; // ✅ เพิ่ม FaLock
-import { IoIosMail } from "react-icons/io"; // ✅ เพิ่ม IoIosMail
+import { FaFacebook, FaGoogle, FaLock } from "react-icons/fa";
+import { IoIosMail } from "react-icons/io";
 import { IoMdExit } from "react-icons/io";
 import { toast } from "react-toastify";
 import useAuthStore from "../../stores/authStore";
@@ -22,7 +22,7 @@ const Login = () => {
 
   useEffect(() => {
     if (isAuthenticated && user) {
-      console.log("✅ User authenticated:", user);
+      console.log("✅ ผู้ใช้ยืนยันตัวตนแล้ว:", user);
     }
   }, [isAuthenticated, user]);
 
@@ -33,7 +33,7 @@ const Login = () => {
   const onFinish = async (values) => {
     try {
       const response = await login(values.email, values.password);
-      console.log("✅ Login response:", response);
+      console.log("✅ การเข้าสู่ระบบสำเร็จ:", response);
 
       const userData = response.data.user;
 
@@ -56,10 +56,10 @@ const Login = () => {
         }
       }, 1000);
     } catch (err) {
-      console.error("❌ Login error:", err);
-      console.log("Error object:", err);
-      console.log("Error message:", err.message);
-      console.log("Error response:", err.response);
+      console.error("❌ ข้อผิดพลาดในการเข้าสู่ระบบ:", err);
+      console.log("ออบเจ็กต์ข้อผิดพลาด:", err);
+      console.log("ข้อความข้อผิดพลาด:", err.message);
+      console.log("การตอบกลับข้อผิดพลาด:", err.response);
 
       let errorMessage = "เกิดข้อผิดพลาดในการเข้าสู่ระบบ";
 
@@ -133,10 +133,10 @@ const Login = () => {
             {/* Title */}
             <div className="text-center mb-8">
               <h1 className="!text-3xl !font-bold !text-gray-800 !mb-2">
-                Welcome Back
+                ยินดีต้อนรับ
               </h1>
               <p className="text-gray-500 text-sm">
-                Sign in to continue your fitness journey
+                เข้าสู่ระบบเพื่อเริ่มต้นการจองสนามกีฬา
               </p>
             </div>
 
@@ -148,11 +148,11 @@ const Login = () => {
               layout="vertical"
               requiredMark={false}
             >
-              {/* Email - ✅ เปลี่ยน icon */}
+              {/* Email */}
               <Form.Item
                 label={
                   <span className="text-gray-700 font-medium text-sm">
-                    Email Address
+                    อีเมล
                   </span>
                 }
                 name="email"
@@ -163,16 +163,16 @@ const Login = () => {
               >
                 <Input
                   prefix={<IoIosMail className="text-gray-400 text-lg" />}
-                  placeholder="Enter your email"
+                  placeholder="กรอกอีเมลของคุณ"
                   className="h-12 rounded-xl border-gray-300 hover:border-orange-400 focus:border-orange-500"
                 />
               </Form.Item>
 
-              {/* Password - ✅ เปลี่ยน icon */}
+              {/* Password */}
               <Form.Item
                 label={
                   <span className="text-gray-700 font-medium text-sm">
-                    Password
+                    รหัสผ่าน
                   </span>
                 }
                 name="password"
@@ -180,7 +180,7 @@ const Login = () => {
               >
                 <Input.Password
                   prefix={<FaLock className="text-gray-400" />}
-                  placeholder="Enter your password"
+                  placeholder="กรอกรหัสผ่านของคุณ"
                   iconRender={(visible) =>
                     visible ? <EyeOutlined /> : <EyeInvisibleOutlined />
                   }
@@ -192,14 +192,14 @@ const Login = () => {
               <div className="flex items-center justify-between mb-6">
                 <Form.Item name="remember" valuePropName="checked" noStyle>
                   <Checkbox className="text-gray-600 text-sm">
-                    Remember me
+                    จดจำฉันไว้
                   </Checkbox>
                 </Form.Item>
                 <Link
                   to="/forgot-password"
                   className="!text-orange-500 !hover:text-orange-600 !text-sm !font-medium"
                 >
-                  Forgot password?
+                  ลืมรหัสผ่าน?
                 </Link>
               </div>
 
@@ -212,13 +212,13 @@ const Login = () => {
                   icon={<IoMdExit className="text-lg" />}
                   className="w-full btn-orange-gradient"
                 >
-                  Login
+                  เข้าสู่ระบบ
                 </Button>
               </Form.Item>
 
               {/* Continue with */}
               <div className="text-center text-gray-400 text-sm mb-4">
-                or Continue with
+                หรือเข้าสู่ระบบด้วย
               </div>
 
               {/* Social Login Buttons */}
@@ -243,13 +243,13 @@ const Login = () => {
               {/* Sign Up Link */}
               <div className="text-center">
                 <span className="text-gray-600 text-sm">
-                  Don't have an account?{" "}
+                  ยังไม่มีบัญชี?{" "}
                 </span>
                 <Link
                   to="/register"
                   className="!text-orange-500 !hover:text-orange-600 !font-semibold !text-sm"
                 >
-                  Sign up here
+                  สมัครสมาชิกที่นี่
                 </Link>
               </div>
             </Form>
@@ -260,7 +260,7 @@ const Login = () => {
       {/* Footer */}
       <footer className="bg-white border-t border-gray-200 py-6 mt-auto">
         <div className="container mx-auto px-4 text-center text-gray-600">
-          <p>© 2025 Sport Booking System - ระบบจองคอร์ทกีฬาออนไลน์</p>
+          <p>© 2025 ระบบจองสนามกีฬา - ระบบจองคอร์ทกีฬาออนไลน์</p>
         </div>
       </footer>
     </div>

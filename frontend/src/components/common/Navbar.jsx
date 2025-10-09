@@ -198,14 +198,15 @@ const Navbar = () => {
                 <div className="flex items-center space-x-3">
                   <Link to="/login">
                     <Button
-                      className="border-2 border-white text-white hover:bg-white hover:text-green-600 font-semibold h-10 px-6 rounded-full"
+                      className="border-2 border-white text-white !hover:bg-white !hover:text-black font-semibold h-10 px-6 rounded-full"
                       ghost
                     >
                       เข้าสู่ระบบ
                     </Button>
                   </Link>
                   <Link to="/register">
-                    <Button className="bg-white text-green-600 hover:bg-green-50 border-0 font-semibold h-10 px-6 rounded-full shadow-md hover:shadow-lg transition-all">
+                    <Button className="border-2 border-white text-white !hover:bg-white !hover:text-black font-semibold h-10 px-6 rounded-full"
+                      ghost>
                       สมัครสมาชิก
                     </Button>
                   </Link>
