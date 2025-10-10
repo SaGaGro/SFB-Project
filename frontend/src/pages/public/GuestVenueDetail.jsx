@@ -54,7 +54,7 @@ const GuestVenueDetail = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50">
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50">
         <Navbar />
         <div className="flex justify-center items-center py-20">
           <Spin size="large" />
@@ -67,15 +67,15 @@ const GuestVenueDetail = () => {
 
   const venueTypeConfig = {
     badminton: { gradient: 'from-orange-500 to-amber-500', text: 'แบดมินตัน', icon: '🏸' },
-    futsal: { gradient: 'from-green-500 to-emerald-500', text: 'ฟุตซอล', icon: '⚽' },
+    futsal: { gradient: 'from-orange-500 to-amber-500', text: 'ฟุตซอล', icon: '⚽' },
     basketball: { gradient: 'from-red-500 to-orange-500', text: 'บาสเกตบอล', icon: '🏀' },
-    other: { gradient: 'from-cyan-500 to-blue-500', text: 'อื่นๆ', icon: '🎾' },
+    other: { gradient: 'from-amber-500 to-orange-500', text: 'อื่นๆ', icon: '🎾' },
   };
 
   const config = venueTypeConfig[venue.venue_type] || venueTypeConfig.other;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50">
       <Navbar />
       
       <div className="container mx-auto px-4 py-8 max-w-7xl">
@@ -95,9 +95,8 @@ const GuestVenueDetail = () => {
             <div>
               <p className="mb-2">คุณกำลังดูข้อมูลในโหมด Guest ไม่สามารถจองสนามได้</p>
               <Button 
-                type="primary" 
                 size="small"
-                className="bg-green-600 hover:bg-green-700"
+                className="!bg-orange-600 !hover:bg-orange-700 !text-white"
                 onClick={() => navigate('/login')}
               >
                 เข้าสู่ระบบเพื่อจอง
@@ -126,8 +125,8 @@ const GuestVenueDetail = () => {
                   ))}
                 </Carousel>
               ) : (
-                <div className="w-full h-96 bg-gradient-to-br from-green-100 to-emerald-100 rounded-2xl flex items-center justify-center shadow-lg">
-                  <AppstoreOutlined className="text-9xl text-green-300" />
+                <div className="w-full h-96 bg-gradient-to-br from-orange-100 to-amber-100 rounded-2xl flex items-center justify-center shadow-lg">
+                  <AppstoreOutlined className="text-9xl text-orange-300" />
                 </div>
               )}
             </Col>
@@ -147,23 +146,23 @@ const GuestVenueDetail = () => {
                 </div>
 
                 <Descriptions column={1} bordered>
-                  <Descriptions.Item label={<><EnvironmentOutlined className="text-green-600" /> สถานที่</>}>
+                  <Descriptions.Item label={<><EnvironmentOutlined className="text-orange-600" /> สถานที่</>}>
                     {venue.location || 'ไม่ระบุ'}
                   </Descriptions.Item>
-                  <Descriptions.Item label={<><ClockCircleOutlined className="text-green-600" /> เวลาเปิด-ปิด</>}>
-                    <span className="font-semibold text-green-600">
+                  <Descriptions.Item label={<><ClockCircleOutlined className="text-orange-600" /> เวลาเปิด-ปิด</>}>
+                    <span className="font-semibold text-orange-600">
                       {venue.opening_time} - {venue.closing_time} น.
                     </span>
                   </Descriptions.Item>
-                  <Descriptions.Item label={<><AppstoreOutlined className="text-green-600" /> จำนวนคอร์ท</>}>
-                    <span className="font-bold text-2xl text-green-600">
+                  <Descriptions.Item label={<><AppstoreOutlined className="text-orange-600" /> จำนวนคอร์ท</>}>
+                    <span className="font-bold text-2xl text-orange-600">
                       {venue.courts?.length || 0} คอร์ท
                     </span>
                   </Descriptions.Item>
                 </Descriptions>
 
                 {venue.description && (
-                  <div className="bg-green-50 p-4 rounded-xl border border-green-100">
+                  <div className="bg-orange-50 p-4 rounded-xl border border-orange-100">
                     <h3 className="text-lg font-semibold mb-2 text-gray-800">รายละเอียด</h3>
                     <p className="text-gray-700 leading-relaxed">{venue.description}</p>
                   </div>
@@ -190,7 +189,7 @@ const GuestVenueDetail = () => {
               venue.courts.map((court) => (
                 <Col xs={24} sm={12} lg={8} xl={6} key={court.court_id}>
                   <Card 
-                    className="border-2 border-gray-200 hover:border-green-400 hover:shadow-xl transition-all rounded-xl relative overflow-hidden"
+                    className="border-2 border-gray-200 hover:border-orange-400 hover:shadow-xl transition-all rounded-xl relative overflow-hidden"
                   >
                     {/* Overlay สำหรับ Guest */}
                     <div className="absolute top-2 right-2 z-10">
@@ -204,9 +203,9 @@ const GuestVenueDetail = () => {
                         {court.court_name}
                       </h4>
                       
-                      <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-3 rounded-lg border border-green-100 mb-3">
+                      <div className="bg-gradient-to-r from-orange-50 to-amber-50 p-3 rounded-lg border border-orange-100 mb-3">
                         <p className="text-sm text-gray-600 mb-1">ราคา</p>
-                        <p className="text-2xl font-bold text-green-600">
+                        <p className="text-2xl font-bold text-orange-600">
                           {court.hourly_rate} <span className="text-base">บาท/ชม.</span>
                         </p>
                       </div>
@@ -220,10 +219,9 @@ const GuestVenueDetail = () => {
                     </div>
                     
                     <Button 
-                      type="primary" 
                       block 
                       size="large"
-                      className="bg-orange-500 hover:bg-orange-600 border-0 font-semibold rounded-lg h-12"
+                      className="!bg-orange-500 !hover:bg-orange-600 !text-white border-0 font-semibold rounded-lg h-12"
                       icon={<LockOutlined />}
                       onClick={handleBookingClick}
                     >
@@ -250,7 +248,7 @@ const GuestVenueDetail = () => {
         width={500}
       >
         <div className="text-center py-6">
-          <div className="w-20 h-20 bg-gradient-to-r from-green-600 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
+          <div className="w-20 h-20 bg-gradient-to-r from-orange-600 to-amber-600 rounded-full flex items-center justify-center mx-auto mb-6">
             <LockOutlined className="text-white text-4xl" />
           </div>
           
@@ -266,7 +264,7 @@ const GuestVenueDetail = () => {
               type="primary"
               size="large"
               block
-              className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 border-0 font-semibold h-12 rounded-xl"
+              className="bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 border-0 font-semibold h-12 rounded-xl"
               onClick={() => navigate('/login', { state: { from: `/venues/${id}` } })}
             >
               เข้าสู่ระบบ

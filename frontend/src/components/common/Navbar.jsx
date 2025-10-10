@@ -110,7 +110,7 @@ const Navbar = () => {
             />
             <div>
               <span className="text-2xl font-bold text-white drop-shadow-md">
-                Ignite Pro
+                SPORT BOOKING
               </span>
               <p className="text-xs text-green-100">ระบบจองคอร์ทกีฬาออนไลน์</p>
             </div>

@@ -70,9 +70,9 @@ const VenueList = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50">
       {/* Hero Section */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 -mx-4 -mt-8 px-4 py-16 mb-8">
+      <div className="relative overflow-hidden bg-gradient-to-r from-orange-600 via-amber-600 to-yellow-600 -mx-4 -mt-8 px-4 py-16 mb-8">
         <div className="absolute inset-0 bg-black opacity-10"></div>
         <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full opacity-5 -mr-48 -mt-48"></div>
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-white rounded-full opacity-5 -ml-48 -mb-48"></div>
@@ -91,23 +91,23 @@ const VenueList = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
             <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-xl p-4 text-center border border-white border-opacity-30 hover:bg-opacity-30 transition-all">
               <div className="text-3xl mb-2">🏟️</div>
-              <p className="text-white text-2xl font-bold">{venueStats.total}</p>
-              <p className="text-white text-sm opacity-90">สนามทั้งหมด</p>
+              <p className="text-black text-2xl font-bold">{venueStats.total}</p>
+              <p className="text-black text-sm opacity-90">สนามทั้งหมด</p>
             </div>
             <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-xl p-4 text-center border border-white border-opacity-30 hover:bg-opacity-30 transition-all">
               <div className="text-3xl mb-2">🏸</div>
-              <p className="text-white text-2xl font-bold">{venueStats.badminton}</p>
-              <p className="text-white text-sm opacity-90">แบดมินตัน</p>
+              <p className="text-black text-2xl font-bold">{venueStats.badminton}</p>
+              <p className="text-black text-sm opacity-90">แบดมินตัน</p>
             </div>
             <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-xl p-4 text-center border border-white border-opacity-30 hover:bg-opacity-30 transition-all">
               <div className="text-3xl mb-2">⚽</div>
-              <p className="text-white text-2xl font-bold">{venueStats.futsal}</p>
-              <p className="text-white text-sm opacity-90">ฟุตซอล</p>
+              <p className="text-black text-2xl font-bold">{venueStats.futsal}</p>
+              <p className="text-black text-sm opacity-90">ฟุตซอล</p>
             </div>
             <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-xl p-4 text-center border border-white border-opacity-30 hover:bg-opacity-30 transition-all">
               <div className="text-3xl mb-2">🏀</div>
-              <p className="text-white text-2xl font-bold">{venueStats.basketball}</p>
-              <p className="text-white text-sm opacity-90">บาสเกตบอล</p>
+              <p className="text-black text-2xl font-bold">{venueStats.basketball}</p>
+              <p className="text-black text-sm opacity-90">บาสเกตบอล</p>
             </div>
           </div>
         </div>
@@ -120,11 +120,11 @@ const VenueList = () => {
             <div className="flex-1">
               <Search
                 placeholder="ค้นหาชื่อสาขา หรือสถานที่..."
-                prefix={<SearchOutlined className="text-green-600" />}
+                prefix={<SearchOutlined className="text-orange-600" />}
                 size="large"
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
-                className="search-green"
+                className="search-orange"
                 allowClear
               />
             </div>
@@ -159,10 +159,10 @@ const VenueList = () => {
                 พบ {filteredVenues.length} สนาม
               </h2>
               <div className="flex gap-2">
-                <Tag color="green" className="px-4 py-1">
+                <Tag color="orange" className="px-4 py-1">
                   ✓ สนามมาตรฐาน
                 </Tag>
-                <Tag color="green" className="px-4 py-1">
+                <Tag color="orange" className="px-4 py-1">
                   ✓ อุปกรณ์ครบครัน
                 </Tag>
               </div>
@@ -191,10 +191,10 @@ const VenueList = () => {
 
       {/* Custom CSS */}
       <style jsx>{`
-        .search-green .ant-input-affix-wrapper:focus,
-        .search-green .ant-input-affix-wrapper-focused {
-          border-color: #10b981;
-          box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.1);
+        .search-orange .ant-input-affix-wrapper:focus,
+        .search-orange .ant-input-affix-wrapper-focused {
+          border-color: #f97316;
+          box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.1);
         }
       `}</style>
     </div>

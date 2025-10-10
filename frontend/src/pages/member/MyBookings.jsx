@@ -122,7 +122,7 @@ const MyBookings = () => {
       dataIndex: 'total_price',
       key: 'total_price',
       render: (price) => (
-        <span className="font-semibold text-green-600">
+        <span className="font-semibold text-orange-600">
           {parseFloat(price).toLocaleString()} บาท
         </span>
       ),
@@ -183,7 +183,7 @@ const MyBookings = () => {
 
   return (
     <div className="space-y-6">
-      <div className="bg-gradient-to-r from-green-600 to-green-800 -mx-4 -mt-8 px-4 py-8 mb-8">
+      <div className="bg-gradient-to-r from-orange-600 to-amber-700 -mx-4 -mt-8 px-4 py-8 mb-8">
         <div className="container mx-auto">
           <h1 className="text-3xl font-bold text-white">การจองของฉัน</h1>
           <p className="text-white opacity-90 mt-2">
@@ -253,7 +253,7 @@ const MyBookings = () => {
               </div>
               <div className="col-span-2">
                 <p className="text-gray-600 text-sm">ราคารวม</p>
-                <p className="font-bold text-2xl text-green-600">
+                <p className="font-bold text-2xl text-orange-600">
                   {parseFloat(selectedBooking.total_price).toLocaleString()} บาท
                 </p>
               </div>
@@ -297,7 +297,7 @@ const MyBookings = () => {
         ) : qrCodeData ? (
           <div className="text-center space-y-4">
             <div className="flex justify-center">
-              <div className="bg-white p-4 rounded-xl border-4 border-green-500 shadow-lg">
+              <div className="bg-white p-4 rounded-xl border-4 border-orange-500 shadow-lg">
                 {qrCodeData.qr_code_url ? (
                   <img 
                     src={qrCodeData.qr_code_url} 
@@ -312,7 +312,7 @@ const MyBookings = () => {
               </div>
             </div>
 
-            <div className="bg-green-50 p-4 rounded-lg">
+            <div className="bg-orange-50 p-4 rounded-lg">
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span className="text-gray-600">รหัสการจอง</span>
@@ -320,7 +320,7 @@ const MyBookings = () => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">จำนวนเงิน</span>
-                  <span className="font-bold text-xl text-green-600">
+                  <span className="font-bold text-xl text-orange-600">
                     {parseFloat(qrCodeData.amount).toLocaleString()} บาท
                   </span>
                 </div>

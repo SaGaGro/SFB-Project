@@ -350,8 +350,18 @@ const VenueDetail = () => {
             <Row gutter={[16, 16]}>
               {venue.equipment.map((item) => (
                 <Col xs={24} sm={12} md={8} lg={6} key={item.equipment_id}>
-                  <Card className="text-center border border-green-100 hover:border-green-400 hover:shadow-lg transition-all rounded-xl">
-                    <div className="text-4xl mb-3">🏸</div>
+                  <Card className="text-center border border-green-100 hover:border-green-400 hover:shadow-lg transition-all rounded-xl overflow-hidden">
+                    {item.image ? (
+                      <img
+                        src={`${import.meta.env.VITE_BASE_URL}${item.image}`}
+                        alt={item.equipment_name}
+                        className="w-full h-40 object-cover mb-3 rounded-lg"
+                      />
+                    ) : (
+                      <div className="w-full h-40 bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center mb-3 rounded-lg">
+                        <span className="text-6xl">🏸</span>
+                      </div>
+                    )}
                     <h4 className="font-bold text-lg mb-2">
                       {item.equipment_name}
                     </h4>
