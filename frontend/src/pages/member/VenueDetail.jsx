@@ -7,7 +7,6 @@ import {
   Tag,
   Rate,
   Button,
-  Carousel,
   Descriptions,
   Divider,
   message,
@@ -23,6 +22,8 @@ import {
   AppstoreOutlined,
   StarFilled,
   CheckCircleFilled,
+  LeftOutlined,
+  RightOutlined,
 } from "@ant-design/icons";
 import api from "../../../services/api";
 
@@ -31,6 +32,7 @@ const VenueDetail = () => {
   const navigate = useNavigate();
   const [venue, setVenue] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   useEffect(() => {
     fetchVenueDetail();
@@ -46,6 +48,26 @@ const VenueDetail = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const nextImage = () => {
+    if (venue.images && venue.images.length > 0) {
+      setCurrentImageIndex((prev) =>
+        prev === venue.images.length - 1 ? 0 : prev + 1
+      );
+    }
+  };
+
+  const prevImage = () => {
+    if (venue.images && venue.images.length > 0) {
+      setCurrentImageIndex((prev) =>
+        prev === 0 ? venue.images.length - 1 : prev - 1
+      );
+    }
+  };
+
+  const goToImage = (index) => {
+    setCurrentImageIndex(index);
   };
 
   if (loading) {
@@ -101,20 +123,50 @@ const VenueDetail = () => {
           <Row gutter={[32, 32]}>
             <Col xs={24} lg={12}>
               {venue.images && venue.images.length > 0 ? (
-                <Carousel
-                  autoplay
-                  className="rounded-2xl overflow-hidden shadow-lg"
-                >
-                  {venue.images.map((image, index) => (
-                    <div key={index}>
-                      <img
-                        src={`${import.meta.env.VITE_BASE_URL}${image}`}
-                        alt={`${venue.venue_name} ${index + 1}`}
-                        className="w-full h-96 object-cover"
+                <div className="relative rounded-2xl overflow-hidden shadow-lg group">
+                  {/* Image Display */}
+                  <img
+                    src={`${import.meta.env.VITE_BASE_URL}${
+                      venue.images[currentImageIndex]
+                    }`}
+                    alt={`${venue.venue_name} ${currentImageIndex + 1}`}
+                    className="w-full h-96 object-cover transition-opacity duration-500"
+                  />
+
+                  {/* Navigation Arrows */}
+                  <button
+                    onClick={prevImage}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white w-10 h-10 rounded-full flex items-center justify-center transition-all opacity-0 group-hover:opacity-100"
+                  >
+                    <LeftOutlined className="text-lg" />
+                  </button>
+                  <button
+                    onClick={nextImage}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white w-10 h-10 rounded-full flex items-center justify-center transition-all opacity-0 group-hover:opacity-100"
+                  >
+                    <RightOutlined className="text-lg" />
+                  </button>
+
+                  {/* Image Counter */}
+                  <div className="absolute top-4 right-4 bg-black/60 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                    {currentImageIndex + 1} / {venue.images.length}
+                  </div>
+
+                  {/* Dots Navigation */}
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                    {venue.images.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => goToImage(index)}
+                        className={`transition-all rounded-full ${
+                          index === currentImageIndex
+                            ? "w-8 h-2 bg-white"
+                            : "w-2 h-2 bg-white/50 hover:bg-white/80"
+                        }`}
                       />
-                    </div>
-                  ))}
-                </Carousel>
+                    ))}
+                  </div>
+                </div>
               ) : (
                 <div className="w-full h-96 bg-gradient-to-br from-green-100 to-emerald-100 rounded-2xl flex items-center justify-center shadow-lg">
                   <AppstoreOutlined className="text-9xl text-green-300" />
