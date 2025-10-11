@@ -156,7 +156,7 @@ export const createCourt = async (req, res) => {
       court_name,
       hourly_rate,
       capacity,
-      images = []
+      images = [] // 🆕 รับ array ของ image URLs
     } = req.body;
     
     if (!venue_id || !court_name || !hourly_rate) {
@@ -176,7 +176,7 @@ export const createCourt = async (req, res) => {
       
       const courtId = courtResult.insertId;
       
-      // เพิ่มรูปภาพ (ถ้ามี)
+      // 🆕 เพิ่มรูปภาพ (ถ้ามี)
       if (images.length > 0) {
         for (const imageUrl of images) {
           await conn.execute(
@@ -206,11 +206,11 @@ export const createCourt = async (req, res) => {
   }
 };
 
-// แก้ไขคอร์ท
+// แก้ไขฟังก์ชัน updateCourt (บรรทัดที่ 144-189)
 export const updateCourt = async (req, res) => {
   try {
     const { id } = req.params;
-    const { court_name, status, hourly_rate, capacity } = req.body;
+    const { court_name, status, hourly_rate, capacity, images } = req.body;
     
     const updateFields = [];
     const params = [];
@@ -232,19 +232,49 @@ export const updateCourt = async (req, res) => {
       params.push(capacity);
     }
     
-    if (updateFields.length === 0) {
+    if (updateFields.length === 0 && !images) {
       return res.status(400).json({
         success: false,
         message: 'ไม่มีข้อมูลที่ต้องการแก้ไข'
       });
     }
     
-    params.push(id);
-    
-    await query(
-      `UPDATE courts SET ${updateFields.join(', ')} WHERE court_id = ?`,
-      params
-    );
+    // 🆕 อัพเดทรูปภาพถ้ามีการส่งมา
+    if (images !== undefined) {
+      await transaction(async (conn) => {
+        // อัพเดทข้อมูลคอร์ท (ถ้ามี)
+        if (updateFields.length > 0) {
+          params.push(id);
+          await conn.execute(
+            `UPDATE courts SET ${updateFields.join(', ')} WHERE court_id = ?`,
+            params
+          );
+        }
+        
+        // ลบรูปภาพเก่าทั้งหมด
+        await conn.execute(
+          'DELETE FROM court_images WHERE court_id = ?',
+          [id]
+        );
+        
+        // เพิ่มรูปภาพใหม่
+        if (images.length > 0) {
+          for (const imageUrl of images) {
+            await conn.execute(
+              'INSERT INTO court_images (court_id, image_url) VALUES (?, ?)',
+              [id, imageUrl]
+            );
+          }
+        }
+      });
+    } else if (updateFields.length > 0) {
+      // อัพเดทเฉพาะข้อมูลคอร์ท
+      params.push(id);
+      await query(
+        `UPDATE courts SET ${updateFields.join(', ')} WHERE court_id = ?`,
+        params
+      );
+    }
     
     // Log activity
     await logActivity(req.user.user_id, 'UPDATE_COURT', 'courts', id);

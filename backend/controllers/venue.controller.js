@@ -129,7 +129,7 @@ export const createVenue = async (req, res) => {
       description,
       opening_time,
       closing_time,
-      images = []
+      images = [] // 🆕 รับ array ของ image URLs
     } = req.body;
     
     if (!venue_name || !venue_type) {
@@ -149,7 +149,7 @@ export const createVenue = async (req, res) => {
       
       const venueId = venueResult.insertId;
       
-      // เพิ่มรูปภาพ (ถ้ามี)
+      // 🆕 เพิ่มรูปภาพ (ถ้ามี)
       if (images.length > 0) {
         for (const imageUrl of images) {
           await conn.execute(
@@ -179,7 +179,7 @@ export const createVenue = async (req, res) => {
   }
 };
 
-// แก้ไขสนาม
+// แก้ไขฟังก์ชัน updateVenue (บรรทัดที่ 142-209)
 export const updateVenue = async (req, res) => {
   try {
     const { id } = req.params;
@@ -190,7 +190,8 @@ export const updateVenue = async (req, res) => {
       description,
       opening_time,
       closing_time,
-      is_active
+      is_active,
+      images // 🆕 รับ array ของ image URLs
     } = req.body;
     
     const updateFields = [];
@@ -225,19 +226,49 @@ export const updateVenue = async (req, res) => {
       params.push(is_active);
     }
     
-    if (updateFields.length === 0) {
+    if (updateFields.length === 0 && !images) {
       return res.status(400).json({
         success: false,
         message: 'ไม่มีข้อมูลที่ต้องการแก้ไข'
       });
     }
     
-    params.push(id);
-    
-    await query(
-      `UPDATE venues SET ${updateFields.join(', ')} WHERE venue_id = ?`,
-      params
-    );
+    // 🆕 อัพเดทรูปภาพถ้ามีการส่งมา
+    if (images !== undefined) {
+      await transaction(async (conn) => {
+        // อัพเดทข้อมูลสนาม (ถ้ามี)
+        if (updateFields.length > 0) {
+          params.push(id);
+          await conn.execute(
+            `UPDATE venues SET ${updateFields.join(', ')} WHERE venue_id = ?`,
+            params
+          );
+        }
+        
+        // ลบรูปภาพเก่าทั้งหมด
+        await conn.execute(
+          'DELETE FROM venue_images WHERE venue_id = ?',
+          [id]
+        );
+        
+        // เพิ่มรูปภาพใหม่
+        if (images.length > 0) {
+          for (const imageUrl of images) {
+            await conn.execute(
+              'INSERT INTO venue_images (venue_id, image_url) VALUES (?, ?)',
+              [id, imageUrl]
+            );
+          }
+        }
+      });
+    } else if (updateFields.length > 0) {
+      // อัพเดทเฉพาะข้อมูลสนาม
+      params.push(id);
+      await query(
+        `UPDATE venues SET ${updateFields.join(', ')} WHERE venue_id = ?`,
+        params
+      );
+    }
     
     // Log activity
     await logActivity(req.user.user_id, 'UPDATE_VENUE', 'venues', id);

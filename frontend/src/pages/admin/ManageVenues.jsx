@@ -11,8 +11,16 @@ import {
   TimePicker,
   Switch,
   message,
+  Upload,
+  Image,
 } from "antd";
-import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import {
+  PlusOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  UploadOutlined,
+  CloseCircleOutlined,
+} from "@ant-design/icons";
 import api from "../../../services/api";
 import dayjs from "dayjs";
 import { useNavigate } from "react-router-dom";
@@ -27,6 +35,12 @@ const ManageVenues = () => {
   const [editingVenue, setEditingVenue] = useState(null);
   const [form] = Form.useForm();
   const navigate = useNavigate();
+
+  // 🆕 State สำหรับจัดการรูปภาพ
+  const [imageFileList, setImageFileList] = useState([]);
+  const [previewVisible, setPreviewVisible] = useState(false);
+  const [previewImage, setPreviewImage] = useState("");
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     fetchVenues();
@@ -46,10 +60,11 @@ const ManageVenues = () => {
   const handleCreate = () => {
     setEditingVenue(null);
     form.resetFields();
+    setImageFileList([]); // 🆕 Reset รูปภาพ
     setModalVisible(true);
   };
 
-  const handleEdit = (record) => {
+  const handleEdit = async (record) => {
     setEditingVenue(record);
     form.setFieldsValue({
       ...record,
@@ -60,6 +75,21 @@ const ManageVenues = () => {
         ? dayjs(record.closing_time, "HH:mm")
         : null,
     });
+
+    // 🆕 โหลดรูปภาพที่มีอยู่แล้ว
+    if (record.images && record.images.length > 0) {
+      const existingImages = record.images.map((url, index) => ({
+        uid: `-${index}`,
+        name: `image-${index}.jpg`,
+        status: "done",
+        url: `${import.meta.env.VITE_BASE_URL}${url}`,
+        existingUrl: url, // เก็บ URL เดิมไว้
+      }));
+      setImageFileList(existingImages);
+    } else {
+      setImageFileList([]);
+    }
+
     setModalVisible(true);
   };
 
@@ -82,12 +112,82 @@ const ManageVenues = () => {
     });
   };
 
+  // 🆕 ฟังก์ชันจัดการ Upload รูปภาพ
+  const handleImageChange = ({ fileList: newFileList }) => {
+    setImageFileList(newFileList);
+  };
+
+  const handlePreview = async (file) => {
+    if (!file.url && !file.preview) {
+      file.preview = await getBase64(file.originFileObj);
+    }
+    setPreviewImage(file.url || file.preview);
+    setPreviewVisible(true);
+  };
+
+  const getBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
+  const handleRemoveImage = (file) => {
+    const newFileList = imageFileList.filter((item) => item.uid !== file.uid);
+    setImageFileList(newFileList);
+  };
+
+  // 🆕 อัพโหลดรูปภาพไปยัง Backend
+  const uploadImages = async () => {
+    const uploadedUrls = [];
+
+    for (const file of imageFileList) {
+      // ถ้าเป็นรูปเดิมที่มีอยู่แล้ว ให้เก็บ URL เดิม
+      if (file.existingUrl) {
+        uploadedUrls.push(file.existingUrl);
+        continue;
+      }
+
+      // ถ้าเป็นรูปใหม่ที่ยังไม่ได้อัพโหลด
+      if (file.originFileObj) {
+        const formData = new FormData();
+        formData.append("venueImages", file.originFileObj);
+
+        try {
+          const response = await api.post("/upload/venue", formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
+
+          if (response.success && response.data.images) {
+            uploadedUrls.push(...response.data.images);
+          }
+        } catch (error) {
+          console.error("Upload error:", error);
+          throw new Error("ไม่สามารถอัพโหลดรูปภาพได้");
+        }
+      }
+    }
+
+    return uploadedUrls;
+  };
+
   const handleSubmit = async (values) => {
     try {
+      setUploading(true);
+
+      // 🆕 อัพโหลดรูปภาพก่อน
+      let imageUrls = [];
+      if (imageFileList.length > 0) {
+        imageUrls = await uploadImages();
+      }
+
       const data = {
         ...values,
         opening_time: values.opening_time?.format("HH:mm"),
         closing_time: values.closing_time?.format("HH:mm"),
+        images: imageUrls, // 🆕 ส่ง URL รูปภาพไปด้วย
       };
 
       if (editingVenue) {
@@ -99,9 +199,12 @@ const ManageVenues = () => {
       }
 
       setModalVisible(false);
+      setImageFileList([]);
       fetchVenues();
     } catch (error) {
-      message.error("เกิดข้อผิดพลาด");
+      message.error(error.message || "เกิดข้อผิดพลาด");
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -111,6 +214,25 @@ const ManageVenues = () => {
       dataIndex: "venue_id",
       key: "venue_id",
       width: 80,
+    },
+    {
+      title: "รูปภาพ",
+      key: "image",
+      width: 100,
+      render: (_, record) =>
+        record.images && record.images.length > 0 ? (
+          <Image
+            width={60}
+            height={60}
+            src={`${import.meta.env.VITE_BASE_URL}${record.images[0]}`}
+            alt={record.venue_name}
+            className="rounded-lg object-cover"
+          />
+        ) : (
+          <div className="w-15 h-15 bg-gray-200 rounded-lg flex items-center justify-center">
+            <span className="text-2xl">🏟️</span>
+          </div>
+        ),
     },
     {
       title: "ชื่อสนาม",
@@ -149,7 +271,17 @@ const ManageVenues = () => {
       key: "court_count",
       width: 120,
       render: (count, record) => (
-        <Button size="small" onClick={() => navigate("/admin/courts")}>
+        <Button
+          size="small"
+          onClick={() =>
+            navigate("/admin/courts", {
+              state: {
+                venueId: record.venue_id,
+                venueName: record.venue_name,
+              },
+            })
+          }
+        >
           {count || 0} คอร์ท
         </Button>
       ),
@@ -190,6 +322,18 @@ const ManageVenues = () => {
     },
   ];
 
+  // 🆕 Upload Props สำหรับ Ant Design Upload
+  const uploadProps = {
+    listType: "picture-card",
+    fileList: imageFileList,
+    onChange: handleImageChange,
+    onPreview: handlePreview,
+    onRemove: handleRemoveImage,
+    beforeUpload: () => false, // ป้องกันการ upload อัตโนมัติ
+    multiple: true,
+    accept: "image/*",
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -219,11 +363,15 @@ const ManageVenues = () => {
       <Modal
         title={editingVenue ? "แก้ไขสนาม" : "เพิ่มสนามใหม่"}
         open={modalVisible}
-        onCancel={() => setModalVisible(false)}
+        onCancel={() => {
+          setModalVisible(false);
+          setImageFileList([]);
+        }}
         onOk={() => form.submit()}
         okText="บันทึก"
         cancelText="ยกเลิก"
-        width={700}
+        width={800}
+        confirmLoading={uploading}
       >
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
           <Form.Item
@@ -273,7 +421,31 @@ const ManageVenues = () => {
           >
             <Switch checkedChildren="เปิด" unCheckedChildren="ปิด" />
           </Form.Item>
+
+          {/* 🆕 Upload รูปภาพ */}
+          <Form.Item label="รูปภาพสนาม (สูงสุด 10 รูป)">
+            <Upload {...uploadProps}>
+              {imageFileList.length >= 10 ? null : (
+                <div>
+                  <PlusOutlined />
+                  <div style={{ marginTop: 8 }}>อัพโหลด</div>
+                </div>
+              )}
+            </Upload>
+            <p className="text-gray-500 text-sm mt-2">
+              รองรับไฟล์: JPG, PNG, GIF (สูงสุด 5MB/ไฟล์)
+            </p>
+          </Form.Item>
         </Form>
+      </Modal>
+
+      {/* 🆕 Modal Preview รูปภาพ */}
+      <Modal
+        open={previewVisible}
+        footer={null}
+        onCancel={() => setPreviewVisible(false)}
+      >
+        <img alt="preview" style={{ width: "100%" }} src={previewImage} />
       </Modal>
     </div>
   );

@@ -51,50 +51,41 @@ export const uploadVenueImages = async (req, res) => {
       });
     }
     
-    const { venueId } = req.body;
-    
-    if (!venueId) {
-      return res.status(400).json({
-        success: false,
-        message: 'กรุณาระบุ venue_id'
-      });
-    }
-    
-    // ตรวจสอบว่ามี venue จริง
-    const venues = await query(
-      'SELECT venue_id FROM venues WHERE venue_id = ?',
-      [venueId]
-    );
-    
-    if (venues.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'ไม่พบสนามที่ต้องการ'
-      });
-    }
-    
     const imageUrls = [];
     
     // บันทึกรูปทั้งหมด
     for (const file of req.files) {
       const imageUrl = `/uploads/venues/${file.filename}`;
-      
-      await query(
-        'INSERT INTO venue_images (venue_id, image_url) VALUES (?, ?)',
-        [venueId, imageUrl]
-      );
-      
       imageUrls.push(imageUrl);
     }
     
-    // Log activity
-    await logActivity(req.user.user_id, 'UPLOAD_VENUE_IMAGES', 'venues', venueId);
+    // 🆕 ถ้ามี venueId ให้บันทึกลง database ด้วย
+    const { venueId } = req.body;
+    if (venueId) {
+      // ตรวจสอบว่ามี venue จริง
+      const venues = await query(
+        'SELECT venue_id FROM venues WHERE venue_id = ?',
+        [venueId]
+      );
+      
+      if (venues.length > 0) {
+        for (const imageUrl of imageUrls) {
+          await query(
+            'INSERT INTO venue_images (venue_id, image_url) VALUES (?, ?)',
+            [venueId, imageUrl]
+          );
+        }
+        
+        // Log activity
+        await logActivity(req.user.user_id, 'UPLOAD_VENUE_IMAGES', 'venues', venueId);
+      }
+    }
     
     res.json({
       success: true,
       message: `อัพโหลดรูปสนามสำเร็จ ${imageUrls.length} รูป`,
       data: {
-        venueId: venueId,
+        venueId: venueId || null,
         images: imageUrls,
         count: imageUrls.length
       }
@@ -108,7 +99,7 @@ export const uploadVenueImages = async (req, res) => {
   }
 };
 
-// Upload รูปคอร์ท (หลายรูป)
+// แก้ไขฟังก์ชัน uploadCourtImages (บรรทัดที่ 97-145)
 export const uploadCourtImages = async (req, res) => {
   try {
     if (!req.files || req.files.length === 0) {
@@ -118,50 +109,41 @@ export const uploadCourtImages = async (req, res) => {
       });
     }
     
-    const { courtId } = req.body;
-    
-    if (!courtId) {
-      return res.status(400).json({
-        success: false,
-        message: 'กรุณาระบุ court_id'
-      });
-    }
-    
-    // ตรวจสอบว่ามี court จริง
-    const courts = await query(
-      'SELECT court_id FROM courts WHERE court_id = ?',
-      [courtId]
-    );
-    
-    if (courts.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'ไม่พบคอร์ทที่ต้องการ'
-      });
-    }
-    
     const imageUrls = [];
     
     // บันทึกรูปทั้งหมด
     for (const file of req.files) {
       const imageUrl = `/uploads/courts/${file.filename}`;
-      
-      await query(
-        'INSERT INTO court_images (court_id, image_url) VALUES (?, ?)',
-        [courtId, imageUrl]
-      );
-      
       imageUrls.push(imageUrl);
     }
     
-    // Log activity
-    await logActivity(req.user.user_id, 'UPLOAD_COURT_IMAGES', 'courts', courtId);
+    // 🆕 ถ้ามี courtId ให้บันทึกลง database ด้วย
+    const { courtId } = req.body;
+    if (courtId) {
+      // ตรวจสอบว่ามี court จริง
+      const courts = await query(
+        'SELECT court_id FROM courts WHERE court_id = ?',
+        [courtId]
+      );
+      
+      if (courts.length > 0) {
+        for (const imageUrl of imageUrls) {
+          await query(
+            'INSERT INTO court_images (court_id, image_url) VALUES (?, ?)',
+            [courtId, imageUrl]
+          );
+        }
+        
+        // Log activity
+        await logActivity(req.user.user_id, 'UPLOAD_COURT_IMAGES', 'courts', courtId);
+      }
+    }
     
     res.json({
       success: true,
       message: `อัพโหลดรูปคอร์ทสำเร็จ ${imageUrls.length} รูป`,
       data: {
-        courtId: courtId,
+        courtId: courtId || null,
         images: imageUrls,
         count: imageUrls.length
       }
