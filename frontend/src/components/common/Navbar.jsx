@@ -201,7 +201,7 @@ const Navbar = () => {
                 <div className="flex items-center space-x-3">
                   <Link to="/login">
                     <Button
-                      className="border-2 border-white text-white !hover:bg-white !hover:text-black font-semibold h-10 px-6 rounded-full"
+                      className="border-2 !border-white text-white  hover:!text-black font-semibold h-10 px-6 rounded-full"
                       ghost
                     >
                       เข้าสู่ระบบ
@@ -209,7 +209,7 @@ const Navbar = () => {
                   </Link>
                   <Link to="/register">
                     <Button
-                      className="border-2 border-white text-white !hover:bg-white !hover:text-black font-semibold h-10 px-6 rounded-full"
+                      className="border-2 !border-white text-white  hover:!text-black font-semibold h-10 px-6 rounded-full"
                       ghost
                     >
                       สมัครสมาชิก
