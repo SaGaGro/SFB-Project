@@ -1,15 +1,16 @@
 import { useState } from 'react';
 import { Layout, Menu } from 'antd';
-import { 
-  DashboardOutlined, 
+import {
+  DashboardOutlined,
   EnvironmentOutlined,
-  CalendarOutlined, 
+  CalendarOutlined,
   UserOutlined,
   TeamOutlined,
   LogoutOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
-  SettingOutlined
+  SettingOutlined,
+  ShoppingOutlined
 } from '@ant-design/icons';
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../../stores/authStore';
@@ -42,6 +43,11 @@ const AdminLayout = () => {
       key: '/admin/bookings',
       icon: <CalendarOutlined />,
       label: 'จัดการการจอง',
+    },
+    {
+      key: '/admin/equipment',
+      icon: <ShoppingOutlined />,
+      label: 'จัดการอุปกรณ์',
     },
     {
       key: '/admin/users',

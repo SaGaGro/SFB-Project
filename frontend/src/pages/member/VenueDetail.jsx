@@ -24,6 +24,7 @@ import {
   CheckCircleFilled,
   LeftOutlined,
   RightOutlined,
+  ShoppingOutlined,
 } from "@ant-design/icons";
 import api from "../../../services/api";
 
@@ -392,42 +393,54 @@ const VenueDetail = () => {
         {venue.equipment && venue.equipment.length > 0 && (
           <Card
             title={
-              <span className="text-2xl font-bold flex items-center gap-3">
-                <span className="w-2 h-8 bg-gradient-to-b from-green-600 to-emerald-600 rounded"></span>
-                อุปกรณ์ให้เช่า
-              </span>
+              <div className="flex items-center justify-between">
+                <span className="text-2xl font-bold flex items-center gap-3">
+                  <span className="w-2 h-8 bg-gradient-to-b from-green-600 to-emerald-600 rounded"></span>
+                  อุปกรณ์ให้เช่า
+                </span>
+                <Tag color="blue" className="px-4 py-2 text-base">
+                  {venue.equipment.length} รายการ
+                </Tag>
+              </div>
             }
             className="mt-6 shadow-xl border-0 rounded-2xl overflow-hidden"
           >
             <Row gutter={[16, 16]}>
               {venue.equipment.map((item) => (
                 <Col xs={24} sm={12} md={8} lg={6} key={item.equipment_id}>
-                  <Card className="text-center border border-green-100 hover:border-green-400 hover:shadow-lg transition-all rounded-xl overflow-hidden">
-                    {item.image ? (
-                      <img
-                        src={`${import.meta.env.VITE_BASE_URL}${item.image}`}
-                        alt={item.equipment_name}
-                        className="w-full h-40 object-cover mb-3 rounded-lg"
-                      />
+                  <Card
+                    size="small"
+                    className="border border-green-100 hover:border-green-400 hover:shadow-lg transition-all rounded-xl overflow-hidden"
+                  >
+                    {item.images && item.images.length > 0 ? (
+                      <div className="w-full h-32 overflow-hidden rounded-lg mb-3">
+                        <img
+                          src={`${import.meta.env.VITE_BASE_URL}${item.images[0]}`}
+                          alt={item.equipment_name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
                     ) : (
-                      <div className="w-full h-40 bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center mb-3 rounded-lg">
-                        <span className="text-6xl">🏸</span>
+                      <div className="w-full h-32 bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center mb-3 rounded-lg">
+                        <ShoppingOutlined className="text-5xl text-green-300" />
                       </div>
                     )}
-                    <h4 className="font-bold text-lg mb-2">
-                      {item.equipment_name}
-                    </h4>
-                    <p className="text-gray-600 text-sm mb-2">
-                      คงเหลือ:{" "}
-                      <span className="font-semibold text-green-600">
-                        {item.stock}
-                      </span>{" "}
-                      ชิ้น
-                    </p>
-                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-2 rounded-lg border border-green-100">
-                      <p className="text-green-600 font-bold text-lg">
-                        {item.rental_price} บาท/ชิ้น
+                    <div className="text-center">
+                      <h4 className="font-bold text-base mb-2 text-gray-800">
+                        {item.equipment_name}
+                      </h4>
+                      <p className="text-gray-600 text-sm mb-2">
+                        คงเหลือ:{" "}
+                        <span className="font-semibold text-green-600">
+                          {item.stock}
+                        </span>{" "}
+                        ชิ้น
                       </p>
+                      <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-2 rounded-lg border border-green-100">
+                        <p className="text-green-600 font-bold text-base">
+                          {item.rental_price} บาท/ชิ้น
+                        </p>
+                      </div>
                     </div>
                   </Card>
                 </Col>

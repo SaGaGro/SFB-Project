@@ -20,6 +20,7 @@ import ManageVenues from './pages/admin/ManageVenues';
 import ManageCourts from './pages/admin/ManageCourts';
 import ManageBookings from './pages/admin/ManageBookings';
 import ManageUsers from './pages/admin/ManageUsers';
+import ManageEquipment from './pages/admin/ManageEquipment';
 
 import ProtectedRoute from './components/common/ProtectedRoute';
 import MemberLayout from './components/layout/MemberLayout';
@@ -68,6 +69,7 @@ function App() {
             <Route path="venues" element={<ManageVenues />} />
             <Route path="courts" element={<ManageCourts />} />
             <Route path="bookings" element={<ManageBookings />} />
+            <Route path="equipment" element={<ManageEquipment />} />
             <Route path="users" element={<ManageUsers />} />
           </Route>
 

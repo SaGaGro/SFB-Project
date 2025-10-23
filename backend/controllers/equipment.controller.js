@@ -5,27 +5,36 @@ import { logActivity } from '../utils/logger.js';
 export const getAllEquipment = async (req, res) => {
   try {
     const { venueId } = req.query;
-    
+
     let sql = `
-      SELECT 
+      SELECT
         e.*,
         v.venue_name
       FROM equipment e
       LEFT JOIN venues v ON e.venue_id = v.venue_id
       WHERE 1=1
     `;
-    
+
     const params = [];
-    
+
     if (venueId) {
       sql += ' AND e.venue_id = ?';
       params.push(venueId);
     }
-    
+
     sql += ' ORDER BY e.equipment_name';
-    
+
     const equipment = await query(sql, params);
-    
+
+    // ดึงรูปภาพของแต่ละอุปกรณ์
+    for (let item of equipment) {
+      const images = await query(
+        'SELECT image_url FROM equipment_images WHERE equipment_id = ?',
+        [item.equipment_id]
+      );
+      item.images = images.map(img => img.image_url);
+    }
+
     res.json({
       success: true,
       count: equipment.length,
@@ -148,11 +157,11 @@ export const createEquipment = async (req, res) => {
 export const updateEquipment = async (req, res) => {
   try {
     const { id } = req.params;
-    const { equipment_name, stock, rental_price } = req.body;
-    
+    const { equipment_name, stock, rental_price, images = [] } = req.body;
+
     const updateFields = [];
     const params = [];
-    
+
     if (equipment_name !== undefined) {
       updateFields.push('equipment_name = ?');
       params.push(equipment_name);
@@ -165,24 +174,45 @@ export const updateEquipment = async (req, res) => {
       updateFields.push('rental_price = ?');
       params.push(rental_price);
     }
-    
-    if (updateFields.length === 0) {
+
+    if (updateFields.length === 0 && images.length === 0) {
       return res.status(400).json({
         success: false,
         message: 'ไม่มีข้อมูลที่ต้องการแก้ไข'
       });
     }
-    
-    params.push(id);
-    
-    await query(
-      `UPDATE equipment SET ${updateFields.join(', ')} WHERE equipment_id = ?`,
-      params
-    );
-    
+
+    await transaction(async (conn) => {
+      // Update equipment info
+      if (updateFields.length > 0) {
+        params.push(id);
+        await conn.execute(
+          `UPDATE equipment SET ${updateFields.join(', ')} WHERE equipment_id = ?`,
+          params
+        );
+      }
+
+      // Update images if provided
+      if (images.length > 0) {
+        // ลบรูปเดิมทั้งหมด
+        await conn.execute(
+          'DELETE FROM equipment_images WHERE equipment_id = ?',
+          [id]
+        );
+
+        // เพิ่มรูปใหม่
+        for (const imageUrl of images) {
+          await conn.execute(
+            'INSERT INTO equipment_images (equipment_id, image_url) VALUES (?, ?)',
+            [id, imageUrl]
+          );
+        }
+      }
+    });
+
     // Log activity
     await logActivity(req.user.user_id, 'UPDATE_EQUIPMENT', 'equipment', id);
-    
+
     res.json({
       success: true,
       message: 'แก้ไขอุปกรณ์สำเร็จ'

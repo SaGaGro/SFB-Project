@@ -46,6 +46,37 @@ router.post(
   uploadEquipmentImages
 );
 
+// Generic single file upload (สำหรับ upload ชั่วคราวก่อนสร้าง entity)
+router.post(
+  '/',
+  authenticate,
+  uploadSingle('file'),
+  async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({
+          success: false,
+          message: 'กรุณาเลือกไฟล์'
+        });
+      }
+
+      const imageUrl = `/uploads/equipment/${req.file.filename}`;
+
+      res.json({
+        success: true,
+        url: imageUrl,
+        message: 'อัปโหลดไฟล์สำเร็จ'
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: 'เกิดข้อผิดพลาดในการอัปโหลดไฟล์',
+        error: error.message
+      });
+    }
+  }
+);
+
 // ลบรูป (Admin/Manager only)
 router.delete(
   '/:type/:id',

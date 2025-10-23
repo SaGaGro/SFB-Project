@@ -43,6 +43,10 @@ const storage = multer.diskStorage({
       case 'equipmentImages':
         uploadPath += 'equipment/';
         break;
+      case 'file':
+        // Generic file upload - check folder from body
+        uploadPath += 'equipment/';  // default to equipment
+        break;
       default:
         uploadPath += 'others/';
     }
