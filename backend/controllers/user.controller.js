@@ -2,13 +2,16 @@ import { query } from '../config/database.js';
 import { logActivity } from '../utils/logger.js';
 import bcrypt from 'bcryptjs';
 
-// ดึงผู้ใช้ทั้งหมด (Admin only)
+// ดึงผู้ใช้ทั้งหมด (Admin & Manager)
+// Admin: ดูได้ทุก role
+// Manager: ดูได้เฉพาะ member
 export const getAllUsers = async (req, res) => {
   try {
     const { role, search } = req.query;
-    
+    const currentUser = req.user;
+
     let sql = `
-      SELECT 
+      SELECT
         user_id,
         username,
         email,
@@ -19,27 +22,36 @@ export const getAllUsers = async (req, res) => {
       FROM users
       WHERE 1=1
     `;
-    
+
     const params = [];
-    
-    if (role) {
+
+    // Manager สามารถดูได้เฉพาะ member เท่านั้น
+    if (currentUser.role === 'manager') {
+      sql += ' AND role = ?';
+      params.push('member');
+    }
+
+    // Filter by role (ถ้ามีการระบุ)
+    if (role && currentUser.role === 'admin') {
       sql += ' AND role = ?';
       params.push(role);
     }
-    
+
+    // Search by username or email
     if (search) {
       sql += ' AND (username LIKE ? OR email LIKE ?)';
       params.push(`%${search}%`, `%${search}%`);
     }
-    
+
     sql += ' ORDER BY created_at DESC';
-    
+
     const users = await query(sql, params);
-    
+
     res.json({
       success: true,
       count: users.length,
-      data: users
+      data: users,
+      userRole: currentUser.role // ส่ง role ของ user ที่ request ไปด้วย
     });
   } catch (error) {
     res.status(500).json({
@@ -165,28 +177,42 @@ export const updateUser = async (req, res) => {
 };
 
 // เปลี่ยน role (Admin only)
+// Admin เท่านั้นที่สามารถเปลี่ยน role ได้
 export const updateUserRole = async (req, res) => {
   try {
     const { id } = req.params;
     const { role } = req.body;
-    
+
     const validRoles = ['admin', 'manager', 'member'];
-    
+
     if (!validRoles.includes(role)) {
       return res.status(400).json({
         success: false,
         message: 'Role ไม่ถูกต้อง'
       });
     }
-    
+
+    // ดึงข้อมูล user ที่จะเปลี่ยน role
+    const targetUsers = await query(
+      'SELECT user_id, role FROM users WHERE user_id = ?',
+      [id]
+    );
+
+    if (targetUsers.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'ไม่พบผู้ใช้ที่ต้องการ'
+      });
+    }
+
     await query(
       'UPDATE users SET role = ? WHERE user_id = ?',
       [role, id]
     );
-    
+
     // Log activity
     await logActivity(req.user.user_id, 'UPDATE_USER_ROLE', 'users', id);
-    
+
     res.json({
       success: true,
       message: 'เปลี่ยน role สำเร็จ'
@@ -200,24 +226,50 @@ export const updateUserRole = async (req, res) => {
   }
 };
 
-// ลบผู้ใช้ (Admin only)
+// ลบผู้ใช้ (Admin & Manager)
+// Admin: ลบได้ทุก role ยกเว้นตัวเอง
+// Manager: ลบได้เฉพาะ member เท่านั้น
 export const deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
-    
+    const currentUser = req.user;
+
     // ห้ามลบตัวเอง
-    if (req.user.user_id === parseInt(id)) {
+    if (currentUser.user_id === parseInt(id)) {
       return res.status(400).json({
         success: false,
         message: 'ไม่สามารถลบบัญชีตัวเองได้'
       });
     }
-    
+
+    // ดึงข้อมูล user ที่จะลบ
+    const targetUsers = await query(
+      'SELECT user_id, role FROM users WHERE user_id = ?',
+      [id]
+    );
+
+    if (targetUsers.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'ไม่พบผู้ใช้ที่ต้องการลบ'
+      });
+    }
+
+    const targetUser = targetUsers[0];
+
+    // Manager สามารถลบได้เฉพาะ member เท่านั้น
+    if (currentUser.role === 'manager' && targetUser.role !== 'member') {
+      return res.status(403).json({
+        success: false,
+        message: 'Manager สามารถลบได้เฉพาะบัญชี Member เท่านั้น'
+      });
+    }
+
     await query('DELETE FROM users WHERE user_id = ?', [id]);
-    
+
     // Log activity
-    await logActivity(req.user.user_id, 'DELETE_USER', 'users', id);
-    
+    await logActivity(currentUser.user_id, 'DELETE_USER', 'users', id);
+
     res.json({
       success: true,
       message: 'ลบผู้ใช้สำเร็จ'

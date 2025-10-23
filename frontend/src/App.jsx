@@ -19,6 +19,7 @@ import AdminDashboard from './pages/admin/Dashboard';
 import ManageVenues from './pages/admin/ManageVenues';
 import ManageCourts from './pages/admin/ManageCourts';
 import ManageBookings from './pages/admin/ManageBookings';
+import ManageUsers from './pages/admin/ManageUsers';
 
 import ProtectedRoute from './components/common/ProtectedRoute';
 import MemberLayout from './components/layout/MemberLayout';
@@ -67,7 +68,7 @@ function App() {
             <Route path="venues" element={<ManageVenues />} />
             <Route path="courts" element={<ManageCourts />} />
             <Route path="bookings" element={<ManageBookings />} />
-            <Route path="users" element={<div>Manage Users (Coming Soon)</div>} />
+            <Route path="users" element={<ManageUsers />} />
           </Route>
 
           {/* Redirect based on role */}

@@ -47,7 +47,6 @@ const AdminLayout = () => {
       key: '/admin/users',
       icon: <TeamOutlined />,
       label: 'จัดการผู้ใช้',
-      style: user?.role !== 'admin' ? { display: 'none' } : {},
     },
     {
       type: 'divider',

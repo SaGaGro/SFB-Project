@@ -86,10 +86,10 @@ router.put('/me', authenticate, async (req, res) => {
   }
 });
 
-// Admin only routes
+// Admin & Manager routes
 router.get('/', authenticate, authorize('admin', 'manager'), getAllUsers);
-router.put('/:id/role', authenticate, authorize('admin'), updateUserRole);
-router.delete('/:id', authenticate, authorize('admin'), deleteUser);
+router.put('/:id/role', authenticate, authorize('admin'), updateUserRole); // Admin only
+router.delete('/:id', authenticate, authorize('admin', 'manager'), deleteUser); // Admin & Manager
 
 // Routes ที่ต้องเช็คสิทธิ์
 router.get('/:id', authenticate, getUserById);
