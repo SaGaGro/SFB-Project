@@ -1,5 +1,30 @@
 import { query, transaction } from '../config/database.js';
 import { logActivity } from '../utils/logger.js';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// ฟังก์ชันลบไฟล์รูปภาพ
+const deleteImageFile = (imageUrl) => {
+  try {
+    if (!imageUrl) return;
+
+    // แปลง URL เป็น path (/uploads/equipment/filename.jpg -> backend/uploads/equipment/filename.jpg)
+    const relativePath = imageUrl.startsWith('/') ? imageUrl.substring(1) : imageUrl;
+    // __dirname = backend/controllers -> ไปที่ backend/ แล้วต่อด้วย relativePath
+    const filePath = path.join(__dirname, '../', relativePath);
+
+    // ตรวจสอบว่าไฟล์มีอยู่จริง
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+  } catch (error) {
+    console.error(`Error deleting file ${imageUrl}:`, error.message);
+  }
+};
 
 // ดึงอุปกรณ์ทั้งหมด
 export const getAllEquipment = async (req, res) => {
@@ -194,13 +219,28 @@ export const updateEquipment = async (req, res) => {
 
       // Update images if provided
       if (images.length > 0) {
-        // ลบรูปเดิมทั้งหมด
+        // ดึงรูปเดิมก่อนลบ
+        const [oldImages] = await conn.execute(
+          'SELECT image_url FROM equipment_images WHERE equipment_id = ?',
+          [id]
+        );
+
+        // หารูปที่ถูกลบ (รูปเดิมที่ไม่อยู่ใน list ใหม่)
+        const oldImageUrls = oldImages.map(img => img.image_url);
+        const deletedImages = oldImageUrls.filter(oldUrl => !images.includes(oldUrl));
+
+        // ลบเฉพาะไฟล์รูปที่ถูกลบออกจาก list
+        for (const imageUrl of deletedImages) {
+          deleteImageFile(imageUrl);
+        }
+
+        // ลบรูปเดิมทั้งหมดจาก database
         await conn.execute(
           'DELETE FROM equipment_images WHERE equipment_id = ?',
           [id]
         );
 
-        // เพิ่มรูปใหม่
+        // เพิ่มรูปใหม่ทั้งหมด (รวมรูปเก่าที่ยังต้องการเก็บ)
         for (const imageUrl of images) {
           await conn.execute(
             'INSERT INTO equipment_images (equipment_id, image_url) VALUES (?, ?)',
@@ -230,12 +270,24 @@ export const updateEquipment = async (req, res) => {
 export const deleteEquipment = async (req, res) => {
   try {
     const { id } = req.params;
-    
+
+    // ดึงรูปภาพที่เกี่ยวข้องก่อนลบ
+    const images = await query(
+      'SELECT image_url FROM equipment_images WHERE equipment_id = ?',
+      [id]
+    );
+
+    // ลบไฟล์รูปภาพจาก folder
+    for (const img of images) {
+      deleteImageFile(img.image_url);
+    }
+
+    // ลบอุปกรณ์ (รูปภาพจะถูกลบอัตโนมัติจาก CASCADE)
     await query('DELETE FROM equipment WHERE equipment_id = ?', [id]);
-    
+
     // Log activity
     await logActivity(req.user.user_id, 'DELETE_EQUIPMENT', 'equipment', id);
-    
+
     res.json({
       success: true,
       message: 'ลบอุปกรณ์สำเร็จ'

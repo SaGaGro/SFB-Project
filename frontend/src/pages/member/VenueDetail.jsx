@@ -12,6 +12,7 @@ import {
   message,
   Spin,
   Empty,
+  Image,
 } from "antd";
 import {
   EnvironmentOutlined,
@@ -410,21 +411,37 @@ const VenueDetail = () => {
                 <Col xs={24} sm={12} md={8} lg={6} key={item.equipment_id}>
                   <Card
                     size="small"
-                    className="border border-green-100 hover:border-green-400 hover:shadow-lg transition-all rounded-xl overflow-hidden"
+                    className="border border-green-100 hover:border-green-400 hover:shadow-lg transition-all rounded-xl h-full"
+                    cover={
+                      item.images && item.images.length > 0 ? (
+                        <div style={{ height: 120, overflow: "hidden", cursor: "pointer", position: "relative" }}>
+                          <Image.PreviewGroup>
+                            <Image
+                              src={`${import.meta.env.VITE_BASE_URL}${item.images[0]}`}
+                              alt={item.equipment_name}
+                              style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                            />
+                            {item.images.slice(1).map((img, index) => (
+                              <Image
+                                key={index}
+                                src={`${import.meta.env.VITE_BASE_URL}${img}`}
+                                style={{ display: "none" }}
+                              />
+                            ))}
+                          </Image.PreviewGroup>
+                          {item.images.length > 1 && (
+                            <div style={{ position: "absolute", top: 4, right: 4, backgroundColor: "rgba(0,0,0,0.6)", color: "white", padding: "2px 8px", borderRadius: "12px", fontSize: "12px", fontWeight: "bold" }}>
+                              +{item.images.length - 1}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div style={{ height: 120, backgroundColor: "#f0f9ff", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <ShoppingOutlined style={{ fontSize: 48, color: "#86efac" }} />
+                        </div>
+                      )
+                    }
                   >
-                    {item.images && item.images.length > 0 ? (
-                      <div className="w-full h-32 overflow-hidden rounded-lg mb-3">
-                        <img
-                          src={`${import.meta.env.VITE_BASE_URL}${item.images[0]}`}
-                          alt={item.equipment_name}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    ) : (
-                      <div className="w-full h-32 bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center mb-3 rounded-lg">
-                        <ShoppingOutlined className="text-5xl text-green-300" />
-                      </div>
-                    )}
                     <div className="text-center">
                       <h4 className="font-bold text-base mb-2 text-gray-800">
                         {item.equipment_name}

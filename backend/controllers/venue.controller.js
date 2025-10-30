@@ -97,7 +97,16 @@ export const getVenueById = async (req, res) => {
       'SELECT * FROM equipment WHERE venue_id = ?',
       [id]
     );
-    
+
+    // ดึงรูปภาพของแต่ละอุปกรณ์
+    for (let item of equipment) {
+      const equipmentImages = await query(
+        'SELECT image_url FROM equipment_images WHERE equipment_id = ?',
+        [item.equipment_id]
+      );
+      item.images = equipmentImages.map(img => img.image_url);
+    }
+
     const venue = {
       ...venues[0],
       avg_rating: venues[0].avg_rating ? parseFloat(venues[0].avg_rating).toFixed(1) : null,
