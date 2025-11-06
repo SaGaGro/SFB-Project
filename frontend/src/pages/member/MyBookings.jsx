@@ -152,7 +152,7 @@ const MyBookings = () => {
           >
             ดู
           </Button>
-          {(record.status === 'pending' || record.status === 'paid') && (
+          {record.status === 'pending' && (
             <Button
               size="small"
               type="primary"
@@ -208,36 +208,53 @@ const MyBookings = () => {
 
       {/* Detail Modal */}
       <Modal
-        title="รายละเอียดการจอง"
+        title={null}
         open={detailModalVisible}
         onCancel={() => setDetailModalVisible(false)}
         footer={null}
         width={600}
+        className="booking-detail-modal"
       >
         {selectedBooking && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-gray-600 text-sm">รหัสการจอง</p>
-                <p className="font-semibold text-lg">#{selectedBooking.booking_id}</p>
-              </div>
-              <div>
-                <p className="text-gray-600 text-sm">สถานะ</p>
-                <Tag color={statusConfig[selectedBooking.status]?.color}>
+          <div className="space-y-6">
+            {/* Header Section */}
+            <div className="bg-gradient-to-r from-orange-600 to-amber-700 -mx-6 -mt-6 px-6 py-6 rounded-t-lg">
+              <h2 className="text-2xl font-bold text-white mb-2">รายละเอียดการจอง</h2>
+              <div className="flex items-center justify-between">
+                <div className="text-white">
+                  <p className="text-sm opacity-90">รหัสการจอง</p>
+                  <p className="text-xl font-bold">#{selectedBooking.booking_id}</p>
+                </div>
+                <Tag
+                  color={statusConfig[selectedBooking.status]?.color}
+                  className="text-base px-4 py-1 m-0"
+                >
                   {statusConfig[selectedBooking.status]?.text}
                 </Tag>
               </div>
-              <div>
-                <p className="text-gray-600 text-sm">สนาม</p>
-                <p className="font-semibold">{selectedBooking.venue_name}</p>
+            </div>
+
+            {/* Venue Information */}
+            <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
+              <div className="space-y-3">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <p className="text-gray-600 text-sm mb-1">สนาม</p>
+                    <p className="font-bold text-lg text-gray-800">{selectedBooking.venue_name}</p>
+                  </div>
+                </div>
+                <div className="border-t border-orange-200 pt-3">
+                  <p className="text-gray-600 text-sm mb-1">คอร์ท</p>
+                  <p className="font-semibold text-gray-800">{selectedBooking.court_name}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-gray-600 text-sm">คอร์ท</p>
-                <p className="font-semibold">{selectedBooking.court_name}</p>
-              </div>
-              <div>
-                <p className="text-gray-600 text-sm">วันที่</p>
-                <p className="font-semibold">
+            </div>
+
+            {/* Date & Time Information */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                <p className="text-gray-600 text-sm mb-2">วันที่</p>
+                <p className="font-bold text-gray-800">
                   {new Date(selectedBooking.booking_date).toLocaleDateString('th-TH', {
                     year: 'numeric',
                     month: 'long',
@@ -245,18 +262,95 @@ const MyBookings = () => {
                   })}
                 </p>
               </div>
-              <div>
-                <p className="text-gray-600 text-sm">เวลา</p>
-                <p className="font-semibold">
+              <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                <p className="text-gray-600 text-sm mb-2">เวลา</p>
+                <p className="font-bold text-gray-800">
                   {selectedBooking.start_time} - {selectedBooking.end_time} น.
                 </p>
               </div>
-              <div className="col-span-2">
-                <p className="text-gray-600 text-sm">ราคารวม</p>
-                <p className="font-bold text-2xl text-orange-600">
-                  {parseFloat(selectedBooking.total_price).toLocaleString()} บาท
+            </div>
+
+            {/* Equipment Section */}
+            {selectedBooking.equipment && selectedBooking.equipment.length > 0 && (
+              <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
+                <p className="text-gray-700 font-semibold mb-3 flex items-center gap-2">
+                  <span className="text-purple-600">🏀</span> อุปกรณ์ที่เช่า
                 </p>
+                <div className="space-y-2">
+                  {selectedBooking.equipment.map((item, index) => (
+                    <div key={index} className="flex justify-between items-center bg-white p-3 rounded border border-purple-100">
+                      <div className="flex-1">
+                        <p className="font-semibold text-gray-800">{item.equipment_name}</p>
+                        <p className="text-sm text-gray-600">จำนวน: {item.quantity} ชิ้น</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm text-gray-600">ราคา/ชิ้น</p>
+                        <p className="font-semibold text-purple-600">
+                          {parseFloat(item.rental_price || 0).toLocaleString()} บาท
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-3 pt-3 border-t border-purple-200 flex justify-between items-center">
+                  <span className="text-gray-700 font-semibold">ราคาอุปกรณ์รวม</span>
+                  <span className="font-bold text-lg text-purple-600">
+                    {selectedBooking.equipment.reduce((sum, item) =>
+                      sum + (parseFloat(item.rental_price || 0) * item.quantity), 0
+                    ).toLocaleString()} บาท
+                  </span>
+                </div>
               </div>
+            )}
+
+            {/* Price Section */}
+            <div className="bg-gradient-to-r from-orange-100 to-amber-100 rounded-lg p-6 border-2 border-orange-300 text-center">
+              <p className="text-gray-700 text-sm mb-2">ราคารวมทั้งหมด</p>
+              <p className="font-bold text-4xl text-orange-600">
+                {parseFloat(selectedBooking.total_price).toLocaleString()} <span className="text-2xl">บาท</span>
+              </p>
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3 pt-2">
+              {selectedBooking.status === 'pending' && (
+                <Button
+                  type="primary"
+                  icon={<QrcodeOutlined />}
+                  onClick={() => {
+                    setDetailModalVisible(false);
+                    handleViewQR(selectedBooking);
+                  }}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 h-10"
+                  size="large"
+                >
+                  ดู QR Code
+                </Button>
+              )}
+              {selectedBooking.status !== 'cancelled' && selectedBooking.status !== 'paid' && (
+                <Button
+                  danger
+                  icon={<CloseCircleOutlined />}
+                  onClick={() => {
+                    setDetailModalVisible(false);
+                    setCancelModalVisible(true);
+                  }}
+                  className="flex-1 h-10"
+                  size="large"
+                >
+                  ยกเลิกการจอง
+                </Button>
+              )}
+              {selectedBooking.status === 'paid' && (
+                <div className="flex-1 bg-green-100 border-2 border-green-500 rounded-lg p-3 text-center">
+                  <p className="text-green-800 font-semibold">
+                    ✅ ชำระเงินเรียบร้อยแล้ว
+                  </p>
+                  <p className="text-sm text-green-700 mt-1">
+                    พร้อมใช้บริการตามวันและเวลาที่จอง
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         )}

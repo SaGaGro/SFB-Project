@@ -14,6 +14,7 @@ import VenueDetail from './pages/member/VenueDetail';
 import BookingForm from './pages/member/BookingForm';
 import MyBookings from './pages/member/MyBookings';
 import Profile from './pages/member/Profile';
+import Notifications from './pages/member/Notifications';
 
 import AdminDashboard from './pages/admin/Dashboard';
 import ManageVenues from './pages/admin/ManageVenues';
@@ -53,6 +54,7 @@ function App() {
             <Route path="venues/:id" element={<VenueDetail />} />
             <Route path="booking/:venueId/:courtId" element={<BookingForm />} />
             <Route path="my-bookings" element={<MyBookings />} />
+            <Route path="notifications" element={<Notifications />} />
             <Route path="profile" element={<Profile />} />
           </Route>
 

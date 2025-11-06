@@ -44,10 +44,33 @@ export const getAllBookings = async (req, res) => {
 
     const bookings = await query(sql, params);
 
+    // ดึงข้อมูลอุปกรณ์สำหรับแต่ละการจอง
+    const bookingsWithEquipment = await Promise.all(
+      bookings.map(async (booking) => {
+        const equipment = await query(
+          `
+          SELECT
+            be.*,
+            e.equipment_name,
+            e.rental_price
+          FROM booking_equipment be
+          LEFT JOIN equipment e ON be.equipment_id = e.equipment_id
+          WHERE be.booking_id = ?
+        `,
+          [booking.booking_id]
+        );
+
+        return {
+          ...booking,
+          equipment,
+        };
+      })
+    );
+
     res.json({
       success: true,
-      count: bookings.length,
-      data: bookings,
+      count: bookingsWithEquipment.length,
+      data: bookingsWithEquipment,
     });
   } catch (error) {
     res.status(500).json({
@@ -99,9 +122,10 @@ export const getBookingById = async (req, res) => {
 
     const equipment = await query(
       `
-      SELECT 
+      SELECT
         be.*,
-        e.equipment_name
+        e.equipment_name,
+        e.rental_price
       FROM booking_equipment be
       LEFT JOIN equipment e ON be.equipment_id = e.equipment_id
       WHERE be.booking_id = ?
@@ -507,18 +531,25 @@ export const cancelBooking = async (req, res) => {
 
     await logActivity(req.user.user_id, "CANCEL_BOOKING", "bookings", id);
 
-    await query(
-      `
-      INSERT INTO notifications (user_id, title, message, type)
-      VALUES (?, ?, ?, ?)
-    `,
-      [
-        booking.user_id,
-        "ยกเลิกการจอง",
-        `การจอง #${id} ได้ถูกยกเลิกแล้ว`,
-        "booking",
-      ]
-    );
+    // ส่งการแจ้งเตือนให้ผู้ใช้
+    try {
+      const isCancelledByAdmin = req.user.user_id !== booking.user_id;
+      await query(
+        `INSERT INTO notifications (user_id, title, message, type)
+         VALUES (?, ?, ?, ?)`,
+        [
+          booking.user_id,
+          "ยกเลิกการจอง",
+          `การจอง #${id} ${isCancelledByAdmin ? "ได้ถูกยกเลิกโดยเจ้าหน้าที่" : "ถูกยกเลิกแล้ว"}${
+            cancellation_reason ? ` เหตุผล: ${cancellation_reason}` : ""
+          }`,
+          "booking",
+        ]
+      );
+      console.log(`✅ Notification sent to user ${booking.user_id} for booking #${id} cancellation`);
+    } catch (notifError) {
+      console.error("❌ Failed to send notification:", notifError.message);
+    }
 
     res.json({
       success: true,
@@ -602,6 +633,365 @@ export const checkPaymentStatus = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "เกิดข้อผิดพลาด",
+      error: error.message,
+    });
+  }
+};
+
+// Admin/Manager: แก้ไขการจอง
+export const updateBooking = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      booking_date,
+      start_time,
+      end_time,
+      court_id,
+      equipment = [],
+    } = req.body;
+
+    // ดึงข้อมูลการจองเดิม
+    const bookings = await query(
+      "SELECT * FROM bookings WHERE booking_id = ?",
+      [id]
+    );
+
+    if (bookings.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "ไม่พบการจองที่ต้องการ",
+      });
+    }
+
+    const oldBooking = bookings[0];
+
+    // ตรวจสอบการทับซ้อนเวลา (ถ้ามีการเปลี่ยนวัน/เวลา/คอร์ท)
+    if (
+      booking_date ||
+      start_time ||
+      end_time ||
+      (court_id && court_id !== oldBooking.court_id)
+    ) {
+      const checkCourtId = court_id || oldBooking.court_id;
+      const checkDate = booking_date || oldBooking.booking_date;
+      const checkStartTime = start_time || oldBooking.start_time;
+      const checkEndTime = end_time || oldBooking.end_time;
+
+      const conflictBookings = await query(
+        `
+        SELECT * FROM bookings
+        WHERE court_id = ?
+          AND booking_date = ?
+          AND booking_id != ?
+          AND status IN ('pending', 'confirmed', 'paid')
+          AND (
+            (start_time < ? AND end_time > ?)
+            OR (start_time < ? AND end_time > ?)
+            OR (start_time >= ? AND end_time <= ?)
+          )
+      `,
+        [
+          checkCourtId,
+          checkDate,
+          id,
+          checkEndTime,
+          checkStartTime,
+          checkEndTime,
+          checkEndTime,
+          checkStartTime,
+          checkEndTime,
+        ]
+      );
+
+      if (conflictBookings.length > 0) {
+        return res.status(400).json({
+          success: false,
+          message: "ช่วงเวลานี้ถูกจองแล้ว",
+        });
+      }
+    }
+
+    await transaction(async (conn) => {
+      // คำนวณราคาใหม่
+      let total_price = oldBooking.total_price;
+
+      // ถ้ามีการเปลี่ยนเวลา คำนวณราคาใหม่
+      if (start_time || end_time || court_id) {
+        const finalCourtId = court_id || oldBooking.court_id;
+        const finalStartTime = start_time || oldBooking.start_time;
+        const finalEndTime = end_time || oldBooking.end_time;
+
+        const [courts] = await conn.execute(
+          "SELECT hourly_rate FROM courts WHERE court_id = ?",
+          [finalCourtId]
+        );
+
+        if (courts.length > 0) {
+          const [startHour, startMin] = finalStartTime.split(":").map(Number);
+          const [endHour, endMin] = finalEndTime.split(":").map(Number);
+          const hours =
+            (endHour * 60 + endMin - startHour * 60 - startMin) / 60;
+
+          total_price = courts[0].hourly_rate * hours;
+        }
+      }
+
+      // ถ้ามีการเปลี่ยนอุปกรณ์
+      if (equipment.length > 0) {
+        // คืนสต็อกอุปกรณ์เดิม
+        const [oldEquipment] = await conn.execute(
+          "SELECT equipment_id, quantity FROM booking_equipment WHERE booking_id = ?",
+          [id]
+        );
+
+        for (const item of oldEquipment) {
+          await conn.execute(
+            "UPDATE equipment SET stock = stock + ? WHERE equipment_id = ?",
+            [item.quantity, item.equipment_id]
+          );
+        }
+
+        // ลบอุปกรณ์เดิม
+        await conn.execute("DELETE FROM booking_equipment WHERE booking_id = ?", [
+          id,
+        ]);
+
+        // เพิ่มอุปกรณ์ใหม่
+        let equipmentPrice = 0;
+        for (const item of equipment) {
+          const [equipmentData] = await conn.execute(
+            "SELECT rental_price, stock FROM equipment WHERE equipment_id = ?",
+            [item.equipment_id]
+          );
+
+          if (
+            equipmentData.length === 0 ||
+            equipmentData[0].stock < item.quantity
+          ) {
+            throw new Error("อุปกรณ์ไม่เพียงพอ");
+          }
+
+          const itemPrice = equipmentData[0].rental_price * item.quantity;
+          equipmentPrice += itemPrice;
+
+          await conn.execute(
+            `INSERT INTO booking_equipment (booking_id, equipment_id, quantity, price)
+             VALUES (?, ?, ?, ?)`,
+            [id, item.equipment_id, item.quantity, itemPrice]
+          );
+
+          await conn.execute(
+            "UPDATE equipment SET stock = stock - ? WHERE equipment_id = ?",
+            [item.quantity, item.equipment_id]
+          );
+        }
+
+        total_price += equipmentPrice;
+      }
+
+      // อัพเดทการจอง
+      const updateFields = [];
+      const params = [];
+
+      if (booking_date) {
+        updateFields.push("booking_date = ?");
+        params.push(booking_date);
+      }
+      if (start_time) {
+        updateFields.push("start_time = ?");
+        params.push(start_time);
+      }
+      if (end_time) {
+        updateFields.push("end_time = ?");
+        params.push(end_time);
+      }
+      if (court_id) {
+        updateFields.push("court_id = ?");
+        params.push(court_id);
+      }
+      if (updateFields.length > 0 || equipment.length > 0) {
+        updateFields.push("total_price = ?");
+        params.push(total_price);
+      }
+
+      if (updateFields.length > 0) {
+        params.push(id);
+        await conn.execute(
+          `UPDATE bookings SET ${updateFields.join(", ")} WHERE booking_id = ?`,
+          params
+        );
+      }
+
+      // อัพเดท court_time_slots
+      if (booking_date || start_time || end_time || court_id) {
+        const finalCourtId = court_id || oldBooking.court_id;
+        const finalDate = booking_date || oldBooking.booking_date;
+        const finalStartTime = start_time || oldBooking.start_time;
+        const finalEndTime = end_time || oldBooking.end_time;
+
+        await conn.execute(
+          "DELETE FROM court_time_slots WHERE booking_id = ?",
+          [id]
+        );
+
+        await conn.execute(
+          `INSERT INTO court_time_slots
+           (court_id, slot_date, start_time, end_time, status, booking_id)
+           VALUES (?, ?, ?, ?, ?, ?)`,
+          [
+            finalCourtId,
+            finalDate,
+            finalStartTime,
+            finalEndTime,
+            oldBooking.status === "paid" ? "booked" : "pending",
+            id,
+          ]
+        );
+      }
+
+      // อัพเดทราคาใน payments
+      await conn.execute(
+        "UPDATE payments SET amount = ? WHERE booking_id = ?",
+        [total_price, id]
+      );
+    });
+
+    await logActivity(
+      req.user.user_id,
+      "ADMIN_UPDATE_BOOKING",
+      "bookings",
+      id
+    );
+
+    // ส่งการแจ้งเตือนให้ผู้ใช้
+    try {
+      let changeDetails = [];
+      if (booking_date) changeDetails.push("วันที่");
+      if (start_time || end_time) changeDetails.push("เวลา");
+      if (court_id) changeDetails.push("คอร์ท");
+      if (equipment.length > 0) changeDetails.push("อุปกรณ์");
+
+      await query(
+        `INSERT INTO notifications (user_id, title, message, type)
+         VALUES (?, ?, ?, ?)`,
+        [
+          oldBooking.user_id,
+          "แก้ไขการจอง",
+          `การจอง #${id} ของคุณได้รับการแก้ไขโดยเจ้าหน้าที่${
+            changeDetails.length > 0 ? ` (เปลี่ยนแปลง: ${changeDetails.join(", ")})` : ""
+          } กรุณาตรวจสอบรายละเอียดอีกครั้ง`,
+          "booking",
+        ]
+      );
+      console.log(`✅ Notification sent to user ${oldBooking.user_id} for booking #${id} update`);
+    } catch (notifError) {
+      console.error("❌ Failed to send notification:", notifError.message);
+    }
+
+    res.json({
+      success: true,
+      message: "แก้ไขการจองสำเร็จ",
+    });
+  } catch (error) {
+    console.error("❌ Update booking error:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "เกิดข้อผิดพลาดในการแก้ไขการจอง",
+    });
+  }
+};
+
+// Admin/Manager: ยืนยันการชำระเงินด้วยตนเอง
+export const confirmPaymentManually = async (req, res) => {
+  try {
+    const { id } = req.params; // booking_id
+    const { note } = req.body;
+
+    const bookings = await query(
+      "SELECT * FROM bookings WHERE booking_id = ?",
+      [id]
+    );
+
+    if (bookings.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "ไม่พบการจองที่ต้องการ",
+      });
+    }
+
+    const booking = bookings[0];
+
+    if (booking.status === "paid") {
+      return res.status(400).json({
+        success: false,
+        message: "การจองนี้ชำระเงินแล้ว",
+      });
+    }
+
+    if (booking.status === "cancelled") {
+      return res.status(400).json({
+        success: false,
+        message: "ไม่สามารถยืนยันการชำระเงินสำหรับการจองที่ถูกยกเลิก",
+      });
+    }
+
+    await transaction(async (conn) => {
+      // อัพเดทสถานะ payment
+      await conn.execute(
+        `UPDATE payments
+         SET status = 'paid', paid_at = NOW()
+         WHERE booking_id = ?`,
+        [id]
+      );
+
+      // อัพเดทสถานะการจอง
+      await conn.execute(
+        'UPDATE bookings SET status = "paid" WHERE booking_id = ?',
+        [id]
+      );
+
+      // อัพเดท court_time_slots
+      await conn.execute(
+        'UPDATE court_time_slots SET status = "booked" WHERE booking_id = ?',
+        [id]
+      );
+
+      // สร้างการแจ้งเตือน
+      try {
+        await conn.execute(
+          `INSERT INTO notifications (user_id, title, message, type)
+           VALUES (?, ?, ?, ?)`,
+          [
+            booking.user_id,
+            "ยืนยันการชำระเงิน",
+            `การชำระเงินสำหรับการจอง #${id} ได้รับการยืนยันโดยเจ้าหน้าที่แล้ว${
+              note ? ` (${note})` : ""
+            }`,
+            "payment",
+          ]
+        );
+        console.log(`✅ Notification sent to user ${booking.user_id} for booking #${id} payment confirmation`);
+      } catch (notifError) {
+        console.error("❌ Failed to send notification:", notifError.message);
+      }
+    });
+
+    await logActivity(
+      req.user.user_id,
+      "ADMIN_CONFIRM_PAYMENT",
+      "bookings",
+      id
+    );
+
+    res.json({
+      success: true,
+      message: "ยืนยันการชำระเงินสำเร็จ",
+    });
+  } catch (error) {
+    console.error("❌ Confirm payment error:", error);
+    res.status(500).json({
+      success: false,
+      message: "เกิดข้อผิดพลาดในการยืนยันการชำระเงิน",
       error: error.message,
     });
   }

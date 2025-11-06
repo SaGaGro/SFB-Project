@@ -1,5 +1,6 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Button, Dropdown, Avatar } from "antd";
+import { Button, Dropdown, Avatar, Badge } from "antd";
+import { useEffect, useState } from "react";
 import logo from "../../assets/logo/logo2.svg";
 import {
   UserOutlined,
@@ -10,13 +11,34 @@ import {
   HomeOutlined,
   EnvironmentOutlined,
   ShopOutlined,
+  BellOutlined,
 } from "@ant-design/icons";
 import useAuthStore from "../../stores/authStore";
+import api from "../../../services/api";
 
 const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, isAuthenticated, logout } = useAuthStore();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (isAuthenticated && user?.role === 'member') {
+      fetchUnreadNotifications();
+      // Refresh ทุก 30 วินาที
+      const interval = setInterval(fetchUnreadNotifications, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [isAuthenticated, user]);
+
+  const fetchUnreadNotifications = async () => {
+    try {
+      const response = await api.get('/notifications?is_read=false');
+      setUnreadCount(response.unreadCount || 0);
+    } catch (error) {
+      console.error('Failed to fetch notifications:', error);
+    }
+  };
 
   const handleLogout = () => {
     logout();
@@ -44,6 +66,12 @@ const Navbar = () => {
       icon: <CalendarOutlined />,
       label: "การจองของฉัน",
       onClick: () => navigate("/member/my-bookings"),
+    },
+    {
+      key: "notifications",
+      icon: <Badge count={unreadCount} size="small" offset={[4, 0]}><BellOutlined /></Badge>,
+      label: "การแจ้งเตือน",
+      onClick: () => navigate("/member/notifications"),
     },
     {
       key: "profile",
@@ -152,13 +180,25 @@ const Navbar = () => {
             {isAuthenticated ? (
               <>
                 {user?.role === "member" ? (
-                  <Link
-                    to="/member/my-bookings"
-                    className="!text-white hover:text-green-100 transition-colors font-medium hidden md:flex items-center gap-2"
-                  >
-                    <CalendarOutlined />
-                    การจองของฉัน
-                  </Link>
+                  <>
+                    <Link
+                      to="/member/my-bookings"
+                      className="!text-white hover:!text-black transition-colors font-medium hidden md:flex items-center gap-2"
+                    >
+                      <CalendarOutlined className="!text-white" />
+                      การจองของฉัน
+                    </Link>
+
+                    <Link
+                      to="/member/notifications"
+                      className="!text-white hover:!text-black transition-colors font-medium hidden md:flex items-center gap-2"
+                    >
+                      <Badge count={unreadCount} size="small" offset={[8, 0]}>
+                        <BellOutlined className="!text-white text-lg" />
+                      </Badge>
+                      <span className="ml-2">แจ้งเตือน</span>
+                    </Link>
+                  </>
                 ) : (
                   <Link
                     to="/admin/dashboard"
