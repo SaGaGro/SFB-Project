@@ -1,8 +1,7 @@
 @import "tailwindcss";
-@import "./assets/fonts/fonts.css";
 
 * {
-  font-family: 'Sukhumvit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: 'Sarabun', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 @layer utilities {
@@ -106,7 +105,7 @@ a.text-orange-600:hover {
 .ant-btn-primary {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   border: none;
-  font-family: 'Sukhumvit', sans-serif;
+  font-family: 'Sarabun', sans-serif;
 }
 
 .ant-btn-primary:hover {
@@ -141,7 +140,7 @@ a.text-orange-600:hover {
 .ant-input-focused {
   border-color: #10b981;
   box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.1);
-  font-family: 'Sukhumvit', sans-serif;
+  font-family: 'Sarabun', sans-serif;
 }
 
 .ant-select:not(.ant-select-disabled):hover .ant-select-selector {
@@ -163,7 +162,7 @@ a.text-orange-600:hover {
   background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
   color: #047857;
   border: 1px solid #6ee7b7;
-  font-family: 'Sukhumvit', sans-serif;
+  font-family: 'Sarabun', sans-serif;
 }
 
 /* Rate stars */
@@ -183,7 +182,7 @@ a.text-orange-600:hover {
 /* Empty state */
 .ant-empty-description {
   color: #6b7280;
-  font-family: 'Sukhumvit', sans-serif;
+  font-family: 'Sarabun', sans-serif;
 }
 
 /* Loading spinner */
@@ -194,13 +193,13 @@ a.text-orange-600:hover {
 /* Modal */
 .ant-modal-content {
   border-radius: 16px;
-  font-family: 'Sukhumvit', sans-serif;
+  font-family: 'Sarabun', sans-serif;
 }
 
 /* Descriptions */
 .ant-descriptions-bordered .ant-descriptions-item-label {
   background-color: #f0fdf4;
-  font-family: 'Sukhumvit', sans-serif;
+  font-family: 'Sarabun', sans-serif;
 }
 
 /* Search input focus */
@@ -227,22 +226,22 @@ a.text-orange-600:hover {
 
 /* Typography */
 body {
-  font-family: 'Sukhumvit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: 'Sarabun', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Sukhumvit', sans-serif;
+  font-family: 'Sarabun', sans-serif;
   font-weight: 700;
 }
 
 .ant-typography {
-  font-family: 'Sukhumvit', sans-serif;
+  font-family: 'Sarabun', sans-serif;
 }
 
 /* Custom Toast Styles */
 .Toastify__toast {
   border-radius: 12px;
-  font-family: 'Sukhumvit', sans-serif;
+  font-family: 'Sarabun', sans-serif;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
