@@ -434,20 +434,20 @@ export const createBooking = async (req, res) => {
       [
         user_id,
         "จองสนามสำเร็จ",
-        `การจองของคุณได้ถูกสร้างแล้ว รหัสการจอง: ${result.bookingId} กรุณาชำระเงินภายใน 15 นาที`,
+        `การจองของคุณได้ถูกสร้างแล้ว รหัสการจอง: ${result.bookingId} กรุณาชำระเงินภายใน 5 นาที`,
         "booking",
       ]
     );
 
     res.status(201).json({
       success: true,
-      message: "จองสำเร็จ กรุณาชำระเงินภายใน 15 นาที",
+      message: "จองสำเร็จ กรุณาชำระเงินภายใน 5 นาที",
       data: {
         bookingId: result.bookingId,
         totalPrice: result.total_price,
         paymentId: result.paymentId,
         qrCode: result.qrCode,
-        deadline: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+        deadline: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
       },
     });
   } catch (error) {

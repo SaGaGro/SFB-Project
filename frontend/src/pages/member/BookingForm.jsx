@@ -390,7 +390,7 @@ const BookingForm = () => {
           if (chargeResponse.success) {
             console.log("✅ Omise charge created:", chargeResponse.data);
 
-            const deadline = new Date(Date.now() + 15 * 60 * 1000);
+            const deadline = new Date(Date.now() + 5 * 60 * 1000);
             setPaymentData({
               bookingId: bookingId,
               chargeId: chargeResponse.data.charge_id,
