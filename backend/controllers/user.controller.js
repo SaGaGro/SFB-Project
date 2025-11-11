@@ -21,6 +21,7 @@ export const getAllUsers = async (req, res) => {
         created_at
       FROM users
       WHERE 1=1
+      AND is_active = 1 -- --- ADDED ---: กรองเฉพาะผู้ใช้ที่ยัง active
     `;
 
     const params = [];
@@ -78,6 +79,7 @@ export const getUserById = async (req, res) => {
         created_at
       FROM users
       WHERE user_id = ?
+      AND is_active = 1 -- --- ADDED ---: กรองเฉพาะผู้ใช้ที่ยัง active
     `, [id]);
     
     if (users.length === 0) {
@@ -123,6 +125,12 @@ export const updateUser = async (req, res) => {
     const { username, phone, profile_image } = req.body;
     
     // ตรวจสอบสิทธิ์ (ต้องเป็นตัวเองหรือ admin)
+    // --- MODIFIED ---: ตรวจสอบว่า user ที่จะแก้ยังมี is_active = 1
+    const targetUser = await query('SELECT 1 FROM users WHERE user_id = ? AND is_active = 1', [id]);
+    if (targetUser.length === 0) {
+      return res.status(404).json({ success: false, message: 'ไม่พบผู้ใช้ที่ต้องการแก้ไข' });
+    }
+
     if (req.user.user_id !== parseInt(id) && req.user.role !== 'admin') {
       return res.status(403).json({
         success: false,
@@ -193,8 +201,9 @@ export const updateUserRole = async (req, res) => {
     }
 
     // ดึงข้อมูล user ที่จะเปลี่ยน role
+    // --- MODIFIED ---: ตรวจสอบว่า user ที่จะแก้ยังมี is_active = 1
     const targetUsers = await query(
-      'SELECT user_id, role FROM users WHERE user_id = ?',
+      'SELECT user_id, role FROM users WHERE user_id = ? AND is_active = 1',
       [id]
     );
 
@@ -243,8 +252,9 @@ export const deleteUser = async (req, res) => {
     }
 
     // ดึงข้อมูล user ที่จะลบ
+    // --- MODIFIED ---: ดึง email มาด้วย และตรวจสอบ is_active
     const targetUsers = await query(
-      'SELECT user_id, role FROM users WHERE user_id = ?',
+      'SELECT user_id, role, email FROM users WHERE user_id = ? AND is_active = 1',
       [id]
     );
 
@@ -265,14 +275,21 @@ export const deleteUser = async (req, res) => {
       });
     }
 
-    await query('DELETE FROM users WHERE user_id = ?', [id]);
+    // --- MODIFIED ---: เปลี่ยนจาก DELETE เป็น UPDATE (Soft Delete)
+    // เก็บ email เดิมไว้ใน deleted_email และตั้งค่า email เป็น NULL
+    // ตั้งค่า is_active = 0 และบันทึกเวลาที่ลบ
+    await query(
+      'UPDATE users SET is_active = 0, email = NULL, deleted_email = ?, deleted_at = NOW() WHERE user_id = ?', 
+      [targetUser.email, id]
+    );
 
     // Log activity
     await logActivity(currentUser.user_id, 'DELETE_USER', 'users', id);
 
     res.json({
       success: true,
-      message: 'ลบผู้ใช้สำเร็จ'
+      // --- MODIFIED ---: เปลี่ยนข้อความ
+      message: 'ปิดการใช้งานผู้ใช้สำเร็จ'
     });
   } catch (error) {
     res.status(500).json({

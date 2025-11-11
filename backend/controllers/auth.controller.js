@@ -17,8 +17,9 @@ export const register = async (req, res) => {
     }
 
     // ตรวจสอบว่า email หรือ username ซ้ำหรือไม่
+    // --- MODIFIED ---: ตรวจสอบเฉพาะ is_active = 1
     const existing = await query(
-      'SELECT email, username FROM users WHERE email = ? OR username = ?',
+      'SELECT email, username FROM users WHERE (email = ? OR username = ?) AND is_active = 1',
       [email, username]
     );
 
@@ -29,10 +30,26 @@ export const register = async (req, res) => {
       });
     }
 
+    // --- ADDED ---: ตรวจสอบเบอร์โทรศัพท์ซ้ำ (ถ้ามีการกรอกเบอร์มา)
+    if (phone) {
+      const phoneExists = await query(
+        'SELECT phone FROM users WHERE phone = ? AND is_active = 1',
+        [phone]
+      );
+
+      if (phoneExists.length > 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'เบอร์โทรศัพท์นี้มีในระบบแล้ว'
+        });
+      }
+    }
+
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Insert user
+    // (is_active จะเป็น 1 โดย default จากฐานข้อมูล)
     const result = await query(
       `INSERT INTO users (username, email, password_hash, phone, role) 
        VALUES (?, ?, ?, ?, ?)`,
@@ -73,9 +90,10 @@ export const login = async (req, res) => {
       });
     }
 
-    // ค้นหา user (ดึง profile_image ด้วย)
+    // ค้นหา user (ดึง profile_image และ is_active ด้วย)
+    // --- MODIFIED ---: เพิ่ม is_active ใน SELECT
     const users = await query(
-      'SELECT user_id, username, email, password_hash, phone, role, profile_image FROM users WHERE email = ?',
+      'SELECT user_id, username, email, password_hash, phone, role, profile_image, is_active FROM users WHERE email = ?',
       [email]
     );
 
@@ -87,6 +105,14 @@ export const login = async (req, res) => {
     }
 
     const user = users[0];
+
+    // --- ADDED ---: ตรวจสอบว่าบัญชีถูกปิดการใช้งานหรือไม่
+    if (user.is_active === 0) {
+      return res.status(403).json({
+        success: false,
+        message: 'บัญชีนี้ถูกปิดการใช้งาน กรุณาติดต่อผู้ดูแล'
+      });
+    }
 
     // ตรวจสอบรหัสผ่าน
     const isMatch = await bcrypt.compare(password, user.password_hash);
@@ -119,7 +145,7 @@ export const login = async (req, res) => {
           email: user.email,
           role: user.role,
           phone: user.phone,
-          profile_image: user.profile_image  // ✅ เพิ่มบรรทัดนี้
+          profile_image: user.profile_image
         }
       }
     });
@@ -135,6 +161,15 @@ export const login = async (req, res) => {
 // ดึงข้อมูลตัวเอง
 export const getMe = async (req, res) => {
   try {
+    // --- ADDED ---: ตรวจสอบว่า user ยัง active อยู่หรือไม่
+    // (req.user มาจาก middleware auth.js)
+    if (req.user.is_active === 0) {
+       return res.status(403).json({
+        success: false,
+        message: 'บัญชีนี้ถูกปิดการใช้งานแล้ว'
+      });
+    }
+    
     res.json({
       success: true,
       data: req.user
@@ -162,8 +197,9 @@ export const changePassword = async (req, res) => {
     }
 
     // ดึงข้อมูล user
+    // --- MODIFIED ---: ตรวจสอบ is_active ด้วย
     const users = await query(
-      'SELECT password_hash FROM users WHERE user_id = ?',
+      'SELECT password_hash, is_active FROM users WHERE user_id = ?',
       [userId]
     );
 
@@ -171,6 +207,14 @@ export const changePassword = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: 'ไม่พบข้อมูลผู้ใช้'
+      });
+    }
+    
+    // --- ADDED ---: ตรวจสอบสถานะ
+    if (users[0].is_active === 0) {
+      return res.status(403).json({
+        success: false,
+        message: 'บัญชีนี้ถูกปิดการใช้งาน'
       });
     }
 
