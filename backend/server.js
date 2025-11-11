@@ -77,7 +77,7 @@ setInterval(async () => {
   } catch (error) {
     console.error('Error in payment expiry cron:', error);
   }
-}, 5 * 60 * 1000);
+}, 30 * 1000);
 
 testConnection().then(() => {
   app.listen(PORT, () => {

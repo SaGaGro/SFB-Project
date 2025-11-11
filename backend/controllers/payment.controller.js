@@ -229,7 +229,7 @@ export const cancelExpiredPayments = async () => {
       SELECT p.payment_id, p.booking_id
       FROM payments p
       WHERE p.status = 'pending'
-        AND p.created_at < DATE_SUB(NOW(), INTERVAL 15 MINUTE)
+        AND p.created_at < DATE_SUB(NOW(), INTERVAL 5 MINUTE)
     `);
     
     for (const payment of expiredPayments) {
