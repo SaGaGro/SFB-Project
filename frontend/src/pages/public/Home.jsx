@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button, Card, Row, Col } from "antd";
 import bgImage from "../../assets/img/4.png";
 import badmintom from "../../assets/img/badmintonHome.jpg";
@@ -23,6 +23,8 @@ import {
 import Navbar from "../../components/common/Navbar";
 
 const Home = () => {
+  const navigate = useNavigate(); // ✅ เพิ่ม useNavigate
+
   const features = [
     {
       icon: <EnvironmentOutlined className="text-5xl text-orange-600" />,
@@ -223,7 +225,7 @@ const Home = () => {
             <Col xs={24} sm={12} lg={6} key={index}>
               <Card
                 className="text-center h-full border-0 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 rounded-2xl overflow-hidden cursor-pointer"
-                onClick={() => (window.location.href = "/venues")}
+                onClick={() => navigate("/venues")} // ✅ ใช้ navigate แทน window.location.href
               >
                 <div className="bg-gradient-to-br ${sport.color} -mx-6 -mt-6 mb-6 relative overflow-hidden aspect-square">
                   <img

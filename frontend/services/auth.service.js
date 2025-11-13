@@ -9,8 +9,9 @@ const authService = {
     try {
       const response = await api.post('/auth/login', { email, password });
       
-      if (response.success && response.data.token) {
-        localStorage.setItem('token', response.data.token);
+      // ❗️ response.data.token จะไม่มีแล้ว
+      if (response.success && response.data.user) {
+        // localStorage.setItem('token', response.data.token); // ❗️ 1. ลบบรรทัดนี้
         localStorage.setItem('user', JSON.stringify(response.data.user));
       }
       
@@ -23,8 +24,9 @@ const authService = {
   },
 
   logout: () => {
-    localStorage.removeItem('token');
+    // localStorage.removeItem('token'); // ❗️ 2. ลบบรรทัดนี้
     localStorage.removeItem('user');
+    // (แนะนำ: ควรเรียก API /auth/logout ที่ backend เพื่อ clear cookie ด้วย)
   },
 
   getCurrentUser: () => {
@@ -33,7 +35,8 @@ const authService = {
   },
 
   isAuthenticated: () => {
-    return !!localStorage.getItem('token');
+    // ❗️ 3. เปลี่ยนเป็นเช็ค 'user' แทน 'token'
+    return !!localStorage.getItem('user');
   },
 
   getMe: async () => {

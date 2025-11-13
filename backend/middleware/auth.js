@@ -4,16 +4,16 @@ import { query } from '../config/database.js';
 // Middleware ตรวจสอบว่า login หรือยัง
 export const authenticate = async (req, res, next) => {
   try {
-    const authHeader = req.headers.authorization;
+    // ❗️❗️ ส่วนที่แก้ไข: อ่าน Token จาก Cookie ❗️❗️
+    const token = req.cookies.token;
     
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!token) {
       return res.status(401).json({
         success: false,
         message: 'กรุณาเข้าสู่ระบบ'
       });
     }
 
-    const token = authHeader.substring(7);
     const decoded = verifyToken(token);
     
     // ดึงข้อมูล user จาก database (รวม profile_image)
@@ -64,10 +64,10 @@ export const authorize = (...roles) => {
 // Middleware สำหรับ optional authentication (ไม่ต้อง login ก็ได้)
 export const optionalAuth = async (req, res, next) => {
   try {
-    const authHeader = req.headers.authorization;
+    // ❗️❗️ ส่วนที่แก้ไข: อ่าน Token จาก Cookie (ถ้ามี) ❗️❗️
+    const token = req.cookies.token;
     
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      const token = authHeader.substring(7);
+    if (token) {
       const decoded = verifyToken(token);
       
       const users = await query(

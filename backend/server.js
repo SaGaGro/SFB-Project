@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import cookieParser from 'cookie-parser'; // 1. Import
 import { testConnection } from './config/database.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
 import { cancelExpiredPayments } from './controllers/payment.controller.js';
@@ -22,9 +23,15 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT;
 
-app.use(cors());
+// 2. อัปเดต CORS
+app.use(cors({
+  origin: 'http://localhost:5173', // ❗️ (Frontend URL)
+  credentials: true
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser()); // 3. ใช้งาน cookie-parser
 app.use('/uploads', express.static('uploads'));
 
 app.get('/health', (req, res) => {

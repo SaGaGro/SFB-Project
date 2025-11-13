@@ -5,6 +5,7 @@ import { logActivity } from '../utils/logger.js';
 
 // ลงทะเบียน
 export const register = async (req, res) => {
+  // ... (โค้ดส่วน register เหมือนเดิม) ...
   try {
     const { username, email, password, phone, role = 'member' } = req.body;
 
@@ -134,11 +135,20 @@ export const login = async (req, res) => {
     // Log activity
     await logActivity(user.user_id, 'USER_LOGIN', 'users', user.user_id);
 
+    // ❗️❗️ ส่วนที่แก้ไข: ตั้งค่า Cookie ❗️❗️
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production', // true ถ้าใช้ HTTPS
+      sameSite: 'strict', // 'strict' หรือ 'lax'
+      maxAge: 1000 * 60 * 60 * 24 * 7 // 7 วัน (ตัวอย่าง)
+    });
+
+    // ❗️❗️ ส่วนที่แก้ไข: ส่ง Response กลับ (ไม่มี token ใน body) ❗️❗️
     res.json({
       success: true,
       message: 'เข้าสู่ระบบสำเร็จ',
       data: {
-        token,
+        // ไม่มี token
         user: {
           userId: user.user_id,
           username: user.username,
@@ -160,6 +170,7 @@ export const login = async (req, res) => {
 
 // ดึงข้อมูลตัวเอง
 export const getMe = async (req, res) => {
+  // ... (โค้ดส่วน getMe เหมือนเดิม) ...
   try {
     // --- ADDED ---: ตรวจสอบว่า user ยัง active อยู่หรือไม่
     // (req.user มาจาก middleware auth.js)
@@ -185,6 +196,7 @@ export const getMe = async (req, res) => {
 
 // เปลี่ยนรหัสผ่าน
 export const changePassword = async (req, res) => {
+  // ... (โค้ดส่วน changePassword เหมือนเดิม) ...
   try {
     const { oldPassword, newPassword } = req.body;
     const userId = req.user.user_id;

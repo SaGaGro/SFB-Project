@@ -7,9 +7,12 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true, // ❗️ 1. เพิ่มบรรทัดนี้
 });
 
 // Request interceptor
+// ❗️ 2. ลบ หรือ Comment out ส่วนนี้
+/*
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -20,6 +23,7 @@ api.interceptors.request.use(
   },
   (error) => Promise.reject(error)
 );
+*/
 
 // Response interceptor
 api.interceptors.response.use(
@@ -31,7 +35,7 @@ api.interceptors.response.use(
       console.log('❌ API Error Response:', error.response.data);
       
       if (error.response.status === 401) {
-        localStorage.removeItem('token');
+        // localStorage.removeItem('token'); // ❗️ ลบการจัดการ Token ที่นี่
         localStorage.removeItem('user');
         // ไม่ redirect ที่นี่ เพราะจะทำใน component
       }
