@@ -92,7 +92,7 @@ const Profile = () => {
 
   return (
     <div className="space-y-6">
-      <div className="bg-gradient-to-r from-green-600 to-emerald-600 -mx-4 -mt-8 px-4 py-8 mb-8">
+      <div className="bg-gradient-to-r from-orange-600 to-orange-500 -mx-4 -mt-8 px-4 py-8 mb-8">
         <div className="container mx-auto">
           <h1 className="text-3xl font-bold text-white">โปรไฟล์ของฉัน</h1>
           <p className="text-white opacity-90 mt-2">
@@ -183,7 +183,7 @@ const Profile = () => {
                   loading={loading}
                   size="large"
                   icon={<SaveOutlined />}
-                  className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 border-0 font-semibold h-12"
+                  className="w-full bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 border-0 font-semibold h-12"
                 >
                   บันทึกการเปลี่ยนแปลง
                 </Button>

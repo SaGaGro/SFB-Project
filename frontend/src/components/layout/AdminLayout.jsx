@@ -79,7 +79,7 @@ const AdminLayout = () => {
   };
 
   return (
-    <Layout className="min-h-screen">
+    <Layout style={{ minHeight: '100vh' }}>
       <Sider 
         trigger={null} 
         collapsible 
@@ -87,7 +87,10 @@ const AdminLayout = () => {
         breakpoint="lg"
         onBreakpoint={(broken) => setCollapsed(broken)}
         className="shadow-lg"
-        style={{ background: '#001529' }}
+        style={{ 
+          background: '#001529',
+          minHeight: '100vh'
+        }}
       >
         <div className="h-16 flex items-center justify-center border-b border-gray-700">
           {!collapsed ? (
