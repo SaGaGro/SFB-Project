@@ -4,8 +4,16 @@ import { query } from '../config/database.js';
 // Middleware ตรวจสอบว่า login หรือยัง
 export const authenticate = async (req, res, next) => {
   try {
-    // ❗️❗️ ส่วนที่แก้ไข: อ่าน Token จาก Cookie ❗️❗️
-    const token = req.cookies.token;
+    let token;
+    
+    // 🆕 รับ token จาก 2 แหล่ง: Cookie (สำหรับ Browser) หรือ Header (สำหรับ Postman/API)
+    if (req.cookies && req.cookies.token) {
+      // จาก Cookie
+      token = req.cookies.token;
+    } else if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+      // จาก Authorization header
+      token = req.headers.authorization.split(' ')[1];
+    }
     
     if (!token) {
       return res.status(401).json({
@@ -64,8 +72,14 @@ export const authorize = (...roles) => {
 // Middleware สำหรับ optional authentication (ไม่ต้อง login ก็ได้)
 export const optionalAuth = async (req, res, next) => {
   try {
-    // ❗️❗️ ส่วนที่แก้ไข: อ่าน Token จาก Cookie (ถ้ามี) ❗️❗️
-    const token = req.cookies.token;
+    let token;
+    
+    // 🆕 รับ token จาก 2 แหล่ง
+    if (req.cookies && req.cookies.token) {
+      token = req.cookies.token;
+    } else if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+      token = req.headers.authorization.split(' ')[1];
+    }
     
     if (token) {
       const decoded = verifyToken(token);

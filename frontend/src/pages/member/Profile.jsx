@@ -123,16 +123,19 @@ const Profile = () => {
     }
   };
 
-  const uploadProps = {
-    name: 'profile',
-    action: `${import.meta.env.VITE_API_URL}/upload/profile`,
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem('token')}`,
-    },
-    onChange: handleAvatarUpload,
-    showUploadList: false,
-    accept: 'image/*',
-  };
+const uploadProps = {
+  name: 'profile',
+  action: `${import.meta.env.VITE_API_URL}/upload/profile`,
+  // ✅ ไม่ต้องส่ง Authorization header เพราะ cookie จะถูกส่งไปอัตโนมัติ
+  // หรือถ้า backend ต้องการ token จาก localStorage ให้เช็คว่ามีจริง
+  headers: localStorage.getItem('token') ? {
+    Authorization: `Bearer ${localStorage.getItem('token')}`,
+  } : {},
+  withCredentials: true, // ✅ สำคัญมาก! ทำให้ส่ง cookie ไปด้วย
+  onChange: handleAvatarUpload,
+  showUploadList: false,
+  accept: 'image/*',
+};
 
   return (
     <div className="space-y-6">

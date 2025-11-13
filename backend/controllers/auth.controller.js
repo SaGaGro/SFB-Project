@@ -80,6 +80,7 @@ export const register = async (req, res) => {
 };
 
 // เข้าสู่ระบบ
+// เข้าสู่ระบบ
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -92,7 +93,6 @@ export const login = async (req, res) => {
     }
 
     // ค้นหา user (ดึง profile_image และ is_active ด้วย)
-    // --- MODIFIED ---: เพิ่ม is_active ใน SELECT
     const users = await query(
       'SELECT user_id, username, email, password_hash, phone, role, profile_image, is_active FROM users WHERE email = ?',
       [email]
@@ -107,7 +107,7 @@ export const login = async (req, res) => {
 
     const user = users[0];
 
-    // --- ADDED ---: ตรวจสอบว่าบัญชีถูกปิดการใช้งานหรือไม่
+    // ตรวจสอบว่าบัญชีถูกปิดการใช้งานหรือไม่
     if (user.is_active === 0) {
       return res.status(403).json({
         success: false,
@@ -135,20 +135,20 @@ export const login = async (req, res) => {
     // Log activity
     await logActivity(user.user_id, 'USER_LOGIN', 'users', user.user_id);
 
-    // ❗️❗️ ส่วนที่แก้ไข: ตั้งค่า Cookie ❗️❗️
+    // ตั้งค่า Cookie (สำหรับ Browser)
     res.cookie('token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', // true ถ้าใช้ HTTPS
-      sameSite: 'strict', // 'strict' หรือ 'lax'
-      maxAge: 1000 * 60 * 60 * 24 * 7 // 7 วัน (ตัวอย่าง)
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 1000 * 60 * 60 * 24 * 7 // 7 วัน
     });
 
-    // ❗️❗️ ส่วนที่แก้ไข: ส่ง Response กลับ (ไม่มี token ใน body) ❗️❗️
+    // 🆕 ส่ง Response (เพิ่ม token ใน body สำหรับ Postman/API)
     res.json({
       success: true,
       message: 'เข้าสู่ระบบสำเร็จ',
+      token: token, // ← เพิ่มบรรทัดนี้
       data: {
-        // ไม่มี token
         user: {
           userId: user.user_id,
           username: user.username,
