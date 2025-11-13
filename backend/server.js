@@ -1,3 +1,4 @@
+// backend/server.js
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -22,41 +23,52 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT;
 
-// ✅ CORS Configuration สำหรับหลาย origins
+// ==========================
+// ✅ CORS Configuration
+// ==========================
 const allowedOrigins = [
-  'http://localhost:5173',           // Development
-  'http://localhost:3000',
-  'http://localhost:5174'           // Alternative dev port
+  'http://localhost:5173',           // Frontend dev
+  'http://localhost:5174',           // Frontend dev alternative
+  'http://localhost:3000',           // Backend testing
+  'https://possibilities-reduces-substances-newly.trycloudflare.com' // Deploy
 ];
 
-app.use(cors({
+const corsOptions = {
   origin: function (origin, callback) {
-    // อนุญาต requests ที่ไม่มี origin (เช่น mobile apps, Postman)
+    // อนุญาต requests ที่ไม่มี origin (Postman, mobile apps, webhook)
     if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) === -1) {
-      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-      return callback(new Error(msg), false);
+
+    if (!allowedOrigins.includes(origin)) {
+      return callback(new Error('The CORS policy for this site does not allow access from the specified Origin.'), false);
     }
     return callback(null, true);
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization']
-}));
+};
 
+// apply CORS globally
+app.use(cors(corsOptions));
+
+// ==========================
+// ✅ Middleware
+// ==========================
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use('/uploads', express.static('uploads'));
 
+// ==========================
+// ✅ Health & API Info
+// ==========================
 app.get('/health', (req, res) => {
   res.json({ success: true, message: 'Server is running' });
 });
 
 app.get('/api', (req, res) => {
-  res.json({ 
-    success: true, 
+  res.json({
+    success: true,
     message: 'Sport Booking System API',
     version: '1.0.0',
     endpoints: {
@@ -69,11 +81,14 @@ app.get('/api', (req, res) => {
       payments: '/api/payments',
       notifications: '/api/notifications',
       omise: '/api/omise',
-      webhooks: '/api/webhooks',
+      webhooks: '/api/webhooks/omise'
     }
   });
 });
 
+// ==========================
+// ✅ Routes
+// ==========================
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/venues', venueRoutes);
@@ -84,12 +99,19 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/omise', omiseRoutes);
+
+// webhook route (ไม่ต้องใช้ CORS)
 app.use('/api/webhooks/omise', omiseRoutes);
 
+// ==========================
+// ✅ Error Handling
+// ==========================
 app.use(notFound);
 app.use(errorHandler);
 
-// Cron job สำหรับยกเลิก payment ที่หมดอายุ
+// ==========================
+// ✅ Cron job สำหรับยกเลิก expired payment
+// ==========================
 setInterval(async () => {
   try {
     const cancelledCount = await cancelExpiredPayments();
@@ -99,8 +121,11 @@ setInterval(async () => {
   } catch (error) {
     console.error('Error in payment expiry cron:', error);
   }
-}, 30 * 1000);
+}, 30 * 1000); // ทุก 30 วินาที
 
+// ==========================
+// ✅ Database & Start Server
+// ==========================
 testConnection().then(() => {
   app.listen(PORT, () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);

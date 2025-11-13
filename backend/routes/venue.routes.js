@@ -14,9 +14,14 @@ const router = express.Router();
 router.get('/', getAllVenues);
 router.get('/:id', getVenueById);
 
-// Protected routes (admin/manager only)
-router.post('/', authenticate, authorize('admin', 'manager'), createVenue);
+// Protected routes
+// ❗️ เปลี่ยน: 'admin' เท่านั้นที่สร้างได้ (จากเดิม 'admin', 'manager')
+router.post('/', authenticate, authorize('admin'), createVenue);
+
+// ❗️ คงเดิม: 'admin' และ 'manager' ยังคงอัปเดตได้
 router.put('/:id', authenticate, authorize('admin', 'manager'), updateVenue);
-router.delete('/:id', authenticate, authorize('admin', 'manager'), deleteVenue);
+
+// ❗️ เปลี่ยน: 'admin' เท่านั้นที่ลบได้ (จากเดิม 'admin', 'manager')
+router.delete('/:id', authenticate, authorize('admin'), deleteVenue);
 
 export default router;

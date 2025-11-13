@@ -180,14 +180,14 @@ const ManageUsers = () => {
       render: (role) => (
         <Tag color={getRoleColor(role)} icon={getRoleIcon(role)}>
           {role === "admin"
-            ? "ผู้ดูแลระบบ"
+            ? "เจ้าของ"
             : role === "manager"
             ? "ผู้จัดการ"
             : "สมาชิก"}
         </Tag>
       ),
       filters: [
-        { text: "ผู้ดูแลระบบ", value: "admin" },
+        { text: "เจ้าของ", value: "admin" },
         { text: "ผู้จัดการ", value: "manager" },
         { text: "สมาชิก", value: "member" },
       ],
@@ -276,7 +276,7 @@ const ManageUsers = () => {
         <Col xs={24} sm={12} md={6}>
           <Card>
             <Statistic
-              title="ผู้ดูแลระบบ"
+              title="เจ้าของ"
               value={stats.admin}
               prefix={<CrownOutlined />}
               valueStyle={{ color: "#f5222d" }}
@@ -326,7 +326,7 @@ const ManageUsers = () => {
               onChange={setRoleFilter}
               allowClear
             >
-              <Option value="admin">ผู้ดูแลระบบ</Option>
+              <Option value="admin">เจ้าของ</Option>
               <Option value="manager">ผู้จัดการ</Option>
               <Option value="member">สมาชิก</Option>
             </Select>
@@ -375,7 +375,7 @@ const ManageUsers = () => {
           >
             <Select>
               <Option value="admin">
-                <CrownOutlined /> ผู้ดูแลระบบ (Admin)
+                <CrownOutlined /> เจ้าของ (Admin)
               </Option>
               <Option value="manager">
                 <SafetyCertificateOutlined /> ผู้จัดการ (Manager)
@@ -417,7 +417,7 @@ const ManageUsers = () => {
               <h2 style={{ marginTop: "16px" }}>{selectedUser.username}</h2>
               <Tag color={getRoleColor(selectedUser.role)} icon={getRoleIcon(selectedUser.role)}>
                 {selectedUser.role === "admin"
-                  ? "ผู้ดูแลระบบ"
+                  ? "เจ้าของ"
                   : selectedUser.role === "manager"
                   ? "ผู้จัดการ"
                   : "สมาชิก"}

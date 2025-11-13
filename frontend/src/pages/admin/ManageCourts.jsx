@@ -20,14 +20,15 @@ import {
   DeleteOutlined,
   ArrowLeftOutlined,
 } from "@ant-design/icons";
-import { useNavigate, useLocation } from "react-router-dom"; // 🆕 เพิ่ม useLocation
+import { useNavigate, useLocation } from "react-router-dom"; 
 import api from "../../../services/api";
+import useAuthStore from "../../stores/authStore"; // ❗️ เพิ่ม import
 
 const { Option } = Select;
 
 const ManageCourts = () => {
   const navigate = useNavigate();
-  const location = useLocation(); // 🆕 รับ state จาก navigate
+  const location = useLocation(); 
   const [venues, setVenues] = useState([]);
   const [courts, setCourts] = useState([]);
   const [selectedVenue, setSelectedVenue] = useState(null);
@@ -35,6 +36,9 @@ const ManageCourts = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [editingCourt, setEditingCourt] = useState(null);
   const [form] = Form.useForm();
+
+  // ❗️ ดึงข้อมูลผู้ใช้ที่ login อยู่
+  const { user: currentUser } = useAuthStore();
 
   // State สำหรับจัดการรูปภาพ
   const [imageFileList, setImageFileList] = useState([]);
@@ -281,14 +285,18 @@ const ManageCourts = () => {
           >
             แก้ไข
           </Button>
-          <Button
-            size="small"
-            danger
-            icon={<DeleteOutlined />}
-            onClick={() => handleDelete(record.court_id)}
-          >
-            ลบ
-          </Button>
+
+          {/* ❗️ เปลี่ยน: แสดงปุ่มลบเฉพาะ admin */}
+          {currentUser?.role === 'admin' && (
+            <Button
+              size="small"
+              danger
+              icon={<DeleteOutlined />}
+              onClick={() => handleDelete(record.court_id)}
+            >
+              ลบ
+            </Button>
+          )}
         </Space>
       ),
     },
@@ -370,14 +378,17 @@ const ManageCourts = () => {
 
         {selectedVenue && (
           <div className="flex justify-end mb-4">
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={handleCreate}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              เพิ่มคอร์ท
-            </Button>
+            {/* ❗️ เปลี่ยน: แสดงปุ่มเพิ่มคอร์ทเฉพาะ admin */}
+            {currentUser?.role === 'admin' && (
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={handleCreate}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                เพิ่มคอร์ท
+              </Button>
+            )}
           </div>
         )}
 

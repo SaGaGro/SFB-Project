@@ -24,6 +24,7 @@ import {
 import api from "../../../services/api";
 import dayjs from "dayjs";
 import { useNavigate } from "react-router-dom";
+import useAuthStore from "../../stores/authStore"; // ❗️ เพิ่ม import
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -35,6 +36,9 @@ const ManageVenues = () => {
   const [editingVenue, setEditingVenue] = useState(null);
   const [form] = Form.useForm();
   const navigate = useNavigate();
+
+  // ❗️ ดึงข้อมูลผู้ใช้ที่ login อยู่
+  const { user: currentUser } = useAuthStore();
 
   // 🆕 State สำหรับจัดการรูปภาพ
   const [imageFileList, setImageFileList] = useState([]);
@@ -308,14 +312,18 @@ const ManageVenues = () => {
           >
             แก้ไข
           </Button>
-          <Button
-            size="small"
-            danger
-            icon={<DeleteOutlined />}
-            onClick={() => handleDelete(record.venue_id)}
-          >
-            ลบ
-          </Button>
+
+          {/* ❗️ เปลี่ยน: แสดงปุ่มลบเฉพาะ admin */}
+          {currentUser?.role === 'admin' && (
+            <Button
+              size="small"
+              danger
+              icon={<DeleteOutlined />}
+              onClick={() => handleDelete(record.venue_id)}
+            >
+              ลบ
+            </Button>
+          )}
         </Space>
       ),
     },
@@ -340,14 +348,18 @@ const ManageVenues = () => {
           <h2 className="text-xl font-bold">จัดการสนาม</h2>
           <p className="text-gray-600">เพิ่ม แก้ไข และลบสนามกีฬา</p>
         </div>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={handleCreate}
-          className="bg-red-600 hover:bg-red-700"
-        >
-          เพิ่มสนาม
-        </Button>
+        
+        {/* ❗️ เปลี่ยน: แสดงปุ่มเพิ่มสนามเฉพาะ admin */}
+        {currentUser?.role === 'admin' && (
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={handleCreate}
+            className="bg-red-600 hover:bg-red-700"
+          >
+            เพิ่มสนาม
+          </Button>
+        )}
       </div>
 
       <Table
