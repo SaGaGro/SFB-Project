@@ -354,6 +354,82 @@ export const updateUserRole = async (req, res) => {
   }
 };
 
+// ⭐️ ============================================
+// ⭐️ ADDED: รีเซ็ตรหัสผ่านโดย Admin/Manager
+// ⭐️ ============================================
+export const resetUserPassword = async (req, res) => {
+  try {
+    const { id } = req.params; // ID ของ user ที่จะรีเซ็ต
+    const { newPassword } = req.body;
+    const currentUser = req.user; // Admin หรือ Manager ที่กำลังล็อกอิน
+
+    if (!newPassword || newPassword.trim().length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'กรุณาระบุรหัสผ่านใหม่'
+      });
+    }
+
+    // ดึงข้อมูล user ที่จะรีเซ็ต
+    const targetUsers = await query(
+      'SELECT user_id, role, is_active FROM users WHERE user_id = ?',
+      [id]
+    );
+
+    if (targetUsers.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'ไม่พบผู้ใช้ที่ต้องการรีเซ็ตรหัสผ่าน'
+      });
+    }
+
+    const targetUser = targetUsers[0];
+
+    // ตรวจสอบว่าบัญชียัง active อยู่หรือไม่
+    if (targetUser.is_active === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'บัญชีนี้ถูกปิดการใช้งาน'
+      });
+    }
+
+    // ตรวจสอบสิทธิ์
+    // Manager สามารถรีเซ็ตได้เฉพาะรหัสผ่านของ member เท่านั้น
+    if (currentUser.role === 'manager' && targetUser.role !== 'member') {
+      return res.status(403).json({
+        success: false,
+        message: 'Manager สามารถรีเซ็ตรหัสผ่านได้เฉพาะบัญชี Member เท่านั้น'
+      });
+    }
+
+    // (Admin สามารถรีเซ็ตได้ทุกคนที่ผ่าน middleware มา)
+
+    // Hash รหัสผ่านใหม่
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update password
+    await query(
+      'UPDATE users SET password_hash = ? WHERE user_id = ?',
+      [hashedPassword, id]
+    );
+
+    // Log activity
+    await logActivity(currentUser.user_id, 'RESET_USER_PASSWORD', 'users', id);
+
+    res.json({
+      success: true,
+      message: 'รีเซ็ตรหัสผ่านสำเร็จ'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'เกิดข้อผิดพลาดในการรีเซ็ตรหัสผ่าน',
+      error: error.message
+    });
+  }
+};
+
+
 // ลบผู้ใช้ (Soft Delete)
 // Admin: ลบได้ทุก role ยกเว้นตัวเอง
 // Manager: ลบได้เฉพาะ member เท่านั้น

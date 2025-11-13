@@ -27,6 +27,7 @@ import {
   TeamOutlined,
   CrownOutlined,
   SafetyCertificateOutlined,
+  KeyOutlined, // ⭐️ ADDED: เพิ่มไอคอน
 } from "@ant-design/icons";
 import api from "../../../services/api";
 import useAuthStore from "../../stores/authStore";
@@ -43,7 +44,13 @@ const ManageUsers = () => {
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [userRole, setUserRole] = useState(null); // Role ของ user ที่ login อยู่
+
+  // ⭐️ ADDED: State สำหรับ Modal รีเซ็ตรหัสผ่าน
+  const [resetModalVisible, setResetModalVisible] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
+
   const [form] = Form.useForm();
+  const [resetForm] = Form.useForm(); // ⭐️ ADDED: Form สำหรับรีเซ็ตรหัสผ่าน
 
   const { user: currentUser } = useAuthStore();
 
@@ -60,7 +67,7 @@ const ManageUsers = () => {
 
       const response = await api.get("/users", { params });
       setUsers(response.data || []);
-      setUserRole(response.userRole); // เก็บ role ของ user ที่ login
+      setUserRole(response.userRole);
     } catch (error) {
       message.error(error.message || "ไม่สามารถโหลดข้อมูลผู้ใช้ได้");
     } finally {
@@ -105,6 +112,31 @@ const ManageUsers = () => {
       message.error(error.message || "ไม่สามารถลบผู้ใช้ได้");
     }
   };
+
+  // ⭐️ ============================================
+  // ⭐️ ADDED: ฟังก์ชันสำหรับรีเซ็ตรหัสผ่าน
+  // ⭐️ ============================================
+  const handleResetPassword = (record) => {
+    setSelectedUser(record);
+    resetForm.resetFields();
+    setResetModalVisible(true);
+  };
+
+  const handleSubmitResetPassword = async () => {
+    try {
+      const values = await resetForm.validateFields(); // values จะมี { newPassword: '...' }
+      setResetLoading(true);
+      await api.put(`/users/${selectedUser.user_id}/reset-password`, values);
+      message.success("รีเซ็ตรหัสผ่านสำเร็จ");
+      setResetModalVisible(false);
+      resetForm.resetFields();
+    } catch (error) {
+      message.error(error.message || "ไม่สามารถรีเซ็ตรหัสผ่านได้");
+    } finally {
+      setResetLoading(false);
+    }
+  };
+  // ⭐️ ============================================
 
   // Get role statistics
   const getRoleStats = () => {
@@ -228,6 +260,21 @@ const ManageUsers = () => {
               />
             </Tooltip>
           )}
+
+          {/* ⭐️ ADDED: ปุ่มรีเซ็ตรหัสผ่าน */}
+          {/* (เงื่อนไขเดียวกับการลบ: ห้ามทำตัวเอง และ Manager ทำได้เฉพาะ member) */}
+          {record.user_id !== currentUser?.user_id &&
+            (currentUser?.role === "admin" ||
+              (currentUser?.role === "manager" && record.role === "member")) && (
+              <Tooltip title="รีเซ็ตรหัสผ่าน">
+                <Button
+                  icon={<KeyOutlined />}
+                  onClick={() => handleResetPassword(record)}
+                  size="small"
+                  style={{ color: "#faad14", borderColor: "#faad14" }}
+                />
+              </Tooltip>
+            )}
 
           {/* ห้ามลบตัวเอง และ Manager ลบได้เฉพาะ member */}
           {record.user_id !== currentUser?.user_id &&
@@ -384,6 +431,33 @@ const ManageUsers = () => {
                 <UserOutlined /> สมาชิก (Member)
               </Option>
             </Select>
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* ⭐️ ADDED: Modal: Reset Password */}
+      <Modal
+        title="รีเซ็ตรหัสผ่าน"
+        open={resetModalVisible}
+        onOk={handleSubmitResetPassword}
+        onCancel={() => setResetModalVisible(false)}
+        okText="บันทึกรหัสผ่านใหม่"
+        cancelText="ยกเลิก"
+        confirmLoading={resetLoading}
+      >
+        <Form form={resetForm} layout="vertical">
+          <Form.Item label="ชื่อผู้ใช้">
+            <Input value={selectedUser?.username} disabled />
+          </Form.Item>
+          <Form.Item
+            name="newPassword"
+            label="รหัสผ่านใหม่"
+            rules={[
+              { required: true, message: "กรุณากรอกรหัสผ่านใหม่" },
+              { min: 6, message: "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร" },
+            ]}
+          >
+            <Input.Password placeholder="ป้อนรหัสผ่านใหม่อย่างน้อย 6 ตัว" />
           </Form.Item>
         </Form>
       </Modal>
