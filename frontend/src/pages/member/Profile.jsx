@@ -1,14 +1,19 @@
 import { useState, useEffect } from 'react';
-import { Card, Form, Input, Button, Avatar, Upload, message, Row, Col } from 'antd';
-import { UserOutlined, MailOutlined, PhoneOutlined, UploadOutlined, SaveOutlined } from '@ant-design/icons';
+import { Card, Form, Input, Button, Avatar, Upload, message, Row, Col, Modal, Alert } from 'antd';
+import { UserOutlined, MailOutlined, PhoneOutlined, UploadOutlined, SaveOutlined, DeleteOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../../stores/authStore';
 import api from '../../../services/api';
 
 const Profile = () => {
-  const { user, updateUser } = useAuthStore();
+  const navigate = useNavigate();
+  const { user, updateUser, logout } = useAuthStore();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState(user?.profile_image);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  // const [deletePassword, setDeletePassword] = useState(''); // ⭐️ ลบ state นี้
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   useEffect(() => {
     form.setFieldsValue({
@@ -54,7 +59,7 @@ const Profile = () => {
   const handleUpdateProfile = async (values) => {
     setLoading(true);
     try {
-      console.log('🔄 Updating profile with:', values);
+      console.log('📝 Updating profile with:', values);
       
       // ส่งแค่ชื่อกับเบอร์ ไม่ต้องส่งรูป (บันทึกไปแล้วตอน upload)
       const response = await api.put('/users/me', {
@@ -65,7 +70,7 @@ const Profile = () => {
       console.log('✅ Update response:', response);
 
       if (response.success) {
-        // อัปเดท user ใน store และ localStorage
+        // อัปเดต user ใน store และ localStorage
         updateUser(response.data);
         message.success('อัปเดตโปรไฟล์สำเร็จ');
       } else {
@@ -76,6 +81,45 @@ const Profile = () => {
       message.error(error.message || 'ไม่สามารถอัปเดตโปรไฟล์ได้');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // เปิด Modal ยืนยันการลบบัญชี
+  const showDeleteConfirm = () => {
+    setDeleteModalVisible(true);
+    // setDeletePassword(''); // ⭐️ ลบบรรทัดนี้
+  };
+
+  // ลบบัญชี
+  const handleDeleteAccount = async () => {
+    // ⭐️ ลบการตรวจสอบ password
+    // if (!deletePassword) {
+    //   message.error('กรุณากรอกรหัสผ่านเพื่อยืนยัน');
+    //   return;
+    // }
+
+    setDeleteLoading(true);
+    try {
+      // ⭐️ ส่ง request โดยไม่มี data (password)
+      const response = await api.delete('/users/me');
+
+      if (response.success) {
+        message.success('ลบบัญชีสำเร็จ');
+        setDeleteModalVisible(false);
+        
+        // Logout และ redirect ไปหน้า login
+        setTimeout(() => {
+          logout();
+          navigate('/login');
+        }, 1500);
+      } else {
+        throw new Error(response.message || 'ลบบัญชีไม่สำเร็จ');
+      }
+    } catch (error) {
+      console.error('❌ Delete account error:', error);
+      message.error(error.message || 'ไม่สามารถลบบัญชีได้');
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -125,6 +169,26 @@ const Profile = () => {
                   เปลี่ยนรูปโปรไฟล์
                 </Button>
               </Upload>
+            </div>
+          </Card>
+
+          {/* Card สำหรับลบบัญชี */}
+          <Card className="mt-6 border-red-200">
+            <div className="text-center">
+              <h3 className="text-lg font-semibold text-red-600 mb-2">
+                ลบบัญชี
+              </h3>
+              <p className="text-gray-600 text-sm mb-4">
+                การลบบัญชีจะทำให้คุณไม่สามารถเข้าสู่ระบบได้อีก
+              </p>
+              <Button
+                danger
+                icon={<DeleteOutlined />}
+                onClick={showDeleteConfirm}
+                block
+              >
+                ลบบัญชีของฉัน
+              </Button>
             </div>
           </Card>
         </Col>
@@ -192,6 +256,54 @@ const Profile = () => {
           </Card>
         </Col>
       </Row>
+
+      {/* Modal ยืนยันการลบบัญชี */}
+      <Modal
+        title={
+          <span className="text-red-600 font-semibold">
+            <ExclamationCircleOutlined className="mr-2" />
+            ยืนยันการลบบัญชี
+          </span>
+        }
+        open={deleteModalVisible}
+        onCancel={() => setDeleteModalVisible(false)}
+        footer={[
+          <Button
+            key="cancel"
+            onClick={() => setDeleteModalVisible(false)}
+            disabled={deleteLoading}
+          >
+            ยกเลิก
+          </Button>,
+          <Button
+            key="delete"
+            type="primary"
+            danger
+            loading={deleteLoading}
+            onClick={handleDeleteAccount}
+            icon={<DeleteOutlined />}
+          >
+            ยืนยันการลบบัญชี
+          </Button>
+        ]}
+      >
+        <Alert
+          message="คำเตือน!"
+          description="การลบบัญชีจะทำให้คุณไม่สามารถเข้าสู่ระบบได้อีก และข้อมูลทั้งหมดจะถูกปิดการใช้งาน"
+          type="warning"
+          showIcon
+          className="mb-4"
+        />
+        
+        {/* ⭐️ ลบ Form และ Input.Password ออกจากตรงนี้ */}
+        
+        <p className="text-gray-600">
+          คุณแน่ใจหรือไม่ว่าต้องการลบบัญชีของคุณ? 
+          <br />
+          การดำเนินการนี้ไม่สามารถย้อนกลับได้
+        </p>
+
+      </Modal>
     </div>
   );
 };

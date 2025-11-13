@@ -41,7 +41,7 @@ const Home = () => {
     {
       icon: <CreditCardOutlined className="text-5xl text-orange-600" />,
       title: "ชำระเงินสะดวก",
-      description: "รองรับ QR Code PromptPay และช่องทางอื่นๆ",
+      description: "รองรับ QR Code PromptPay ",
       gradient: "from-yellow-50 to-orange-50",
     },
     {
@@ -307,7 +307,7 @@ const Home = () => {
               สมัครสมาชิกวันนี้ จองคอร์ทได้ทันที
             </p>
             <p className="text-lg mb-10 opacity-90">
-              ✓ ไม่มีค่าสมัคร ✓ จองง่ายในไม่กี่คลิก ✓ ยกเลิกได้ฟรี
+              ✓ ไม่มีค่าสมัคร ✓ จองง่ายในไม่กี่คลิก
             </p>
             <Link to="/register">
               <Button
