@@ -323,11 +323,20 @@ const VenueDetail = () => {
                 <Col xs={24} sm={12} lg={8} xl={6} key={court.court_id}>
                   <Card
                     className="border-2 border-green-100 hover:border-green-400 hover:shadow-xl transition-all duration-300 cursor-pointer rounded-xl overflow-hidden transform hover:-translate-y-1"
-                    onClick={() =>
-                      navigate(
-                        `/member/booking/${venue.venue_id}/${court.court_id}`
-                      )
-                    }
+                    onClick={() => {
+                      if (court.status === "available") {
+                        navigate(
+                          `/member/booking/${venue.venue_id}/${court.court_id}`
+                        );
+                      }
+                    }}
+                    style={{
+                      cursor:
+                        court.status === "available"
+                          ? "pointer"
+                          : "not-allowed",
+                      opacity: court.status === "available" ? 1 : 0.6,
+                    }}
                   >
                     <div className="flex justify-between items-start mb-4">
                       <div>
@@ -416,12 +425,25 @@ const VenueDetail = () => {
                     className="border border-green-100 hover:border-green-400 hover:shadow-lg transition-all rounded-xl h-full"
                     cover={
                       item.images && item.images.length > 0 ? (
-                        <div style={{ height: 120, overflow: "hidden", cursor: "pointer", position: "relative" }}>
+                        <div
+                          style={{
+                            height: 120,
+                            overflow: "hidden",
+                            cursor: "pointer",
+                            position: "relative",
+                          }}
+                        >
                           <Image.PreviewGroup>
                             <Image
-                              src={`${import.meta.env.VITE_BASE_URL}${item.images[0]}`}
+                              src={`${import.meta.env.VITE_BASE_URL}${
+                                item.images[0]
+                              }`}
                               alt={item.equipment_name}
-                              style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                              style={{
+                                width: "100%",
+                                height: "100%",
+                                objectFit: "contain",
+                              }}
                             />
                             {item.images.slice(1).map((img, index) => (
                               <Image
@@ -432,14 +454,36 @@ const VenueDetail = () => {
                             ))}
                           </Image.PreviewGroup>
                           {item.images.length > 1 && (
-                            <div style={{ position: "absolute", top: 4, right: 4, backgroundColor: "rgba(0,0,0,0.6)", color: "white", padding: "2px 8px", borderRadius: "12px", fontSize: "12px", fontWeight: "bold" }}>
+                            <div
+                              style={{
+                                position: "absolute",
+                                top: 4,
+                                right: 4,
+                                backgroundColor: "rgba(0,0,0,0.6)",
+                                color: "white",
+                                padding: "2px 8px",
+                                borderRadius: "12px",
+                                fontSize: "12px",
+                                fontWeight: "bold",
+                              }}
+                            >
                               +{item.images.length - 1}
                             </div>
                           )}
                         </div>
                       ) : (
-                        <div style={{ height: 120, backgroundColor: "#f0f9ff", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                          <ShoppingOutlined style={{ fontSize: 48, color: "#86efac" }} />
+                        <div
+                          style={{
+                            height: 120,
+                            backgroundColor: "#f0f9ff",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <ShoppingOutlined
+                            style={{ fontSize: 48, color: "#86efac" }}
+                          />
                         </div>
                       )
                     }

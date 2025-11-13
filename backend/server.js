@@ -26,18 +26,27 @@ const PORT = process.env.PORT;
 // ==========================
 // ✅ CORS Configuration
 // ==========================
-const allowedOrigins = [
-  'http://localhost:5173',           // Frontend dev
-  'http://localhost:5174',           // Frontend dev alternative
-  'http://localhost:3000',           // Backend testing
-  'https://possibilities-reduces-substances-newly.trycloudflare.com' // Deploy
-];
+
+// 1. อ่านค่า ALLOWED_ORIGINS จากไฟล์ .env
+const originsFromEnv = process.env.ALLOWED_ORIGINS || '';
+
+// 2. แปลง String (ที่คั่นด้วยจุลภาค) ให้เป็น Array
+// .filter(Boolean) คือการกรองค่าว่างออก (เช่น ถ้า .env เป็นค่าว่าง)
+const allowedOrigins = originsFromEnv.split(',').filter(Boolean);
+
+// 3. (Optional) แสดง Log ให้เห็นว่าดึงค่ามาสำเร็จ
+if (allowedOrigins.length > 0) {
+  console.log('✅ CORS Allowed Origins:', allowedOrigins);
+} else {
+  console.warn('⚠️ CORS: ALLOWED_ORIGINS is not set in .env. All cross-origin requests may be blocked.');
+}
 
 const corsOptions = {
   origin: function (origin, callback) {
     // อนุญาต requests ที่ไม่มี origin (Postman, mobile apps, webhook)
     if (!origin) return callback(null, true);
 
+    // 4. ตรวจสอบว่า origin ที่ยิงมา อยู่ใน list ที่เราอนุญาตหรือไม่
     if (!allowedOrigins.includes(origin)) {
       return callback(new Error('The CORS policy for this site does not allow access from the specified Origin.'), false);
     }
@@ -100,8 +109,6 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/omise', omiseRoutes);
 
-// webhook route (ไม่ต้องใช้ CORS)
-app.use('/api/webhooks/omise', omiseRoutes);
 
 // ==========================
 // ✅ Error Handling
