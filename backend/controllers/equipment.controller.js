@@ -30,6 +30,9 @@ const deleteImageFile = (imageUrl) => {
 export const getAllEquipment = async (req, res) => {
   try {
     const { venueId } = req.query;
+    
+    // ตรวจสอบว่าเป็น admin/manager หรือไม่
+    const isAdminOrManager = req.user && ['admin', 'manager'].includes(req.user.role);
 
     let sql = `
       SELECT
@@ -41,6 +44,11 @@ export const getAllEquipment = async (req, res) => {
     `;
 
     const params = [];
+    
+    // ถ้าไม่ใช่ admin/manager แสดงเฉพาะอุปกรณ์ที่ is_active = 1
+    if (!isAdminOrManager) {
+      sql += ' AND e.is_active = 1';
+    }
 
     if (venueId) {
       sql += ' AND e.venue_id = ?';
@@ -79,7 +87,10 @@ export const getEquipmentById = async (req, res) => {
   try {
     const { id } = req.params;
     
-    const equipment = await query(`
+    // ตรวจสอบว่าเป็น admin/manager หรือไม่
+    const isAdminOrManager = req.user && ['admin', 'manager'].includes(req.user.role);
+    
+    let sql = `
       SELECT 
         e.*,
         v.venue_name,
@@ -87,7 +98,14 @@ export const getEquipmentById = async (req, res) => {
       FROM equipment e
       LEFT JOIN venues v ON e.venue_id = v.venue_id
       WHERE e.equipment_id = ?
-    `, [id]);
+    `;
+    
+    // ถ้าไม่ใช่ admin/manager แสดงเฉพาะอุปกรณ์ที่ is_active = 1
+    if (!isAdminOrManager) {
+      sql += ' AND e.is_active = 1';
+    }
+    
+    const equipment = await query(sql, [id]);
     
     if (equipment.length === 0) {
       return res.status(404).json({
@@ -128,6 +146,7 @@ export const createEquipment = async (req, res) => {
       equipment_name,
       stock,
       rental_price,
+      is_active = 1,
       images = []
     } = req.body;
     
@@ -141,9 +160,9 @@ export const createEquipment = async (req, res) => {
     const result = await transaction(async (conn) => {
       // สร้างอุปกรณ์
       const [equipmentResult] = await conn.execute(
-        `INSERT INTO equipment (venue_id, equipment_name, stock, rental_price)
-         VALUES (?, ?, ?, ?)`,
-        [venue_id, equipment_name, stock, rental_price]
+        `INSERT INTO equipment (venue_id, equipment_name, stock, rental_price, is_active)
+         VALUES (?, ?, ?, ?, ?)`,
+        [venue_id, equipment_name, stock, rental_price, is_active]
       );
       
       const equipmentId = equipmentResult.insertId;
@@ -182,7 +201,7 @@ export const createEquipment = async (req, res) => {
 export const updateEquipment = async (req, res) => {
   try {
     const { id } = req.params;
-    const { equipment_name, stock, rental_price, images = [] } = req.body;
+    const { equipment_name, stock, rental_price, is_active, images = [] } = req.body;
 
     const updateFields = [];
     const params = [];
@@ -198,6 +217,10 @@ export const updateEquipment = async (req, res) => {
     if (rental_price !== undefined) {
       updateFields.push('rental_price = ?');
       params.push(rental_price);
+    }
+    if (is_active !== undefined) {
+      updateFields.push('is_active = ?');
+      params.push(is_active);
     }
 
     if (updateFields.length === 0 && images.length === 0) {
@@ -266,7 +289,55 @@ export const updateEquipment = async (req, res) => {
   }
 };
 
-// ลบอุปกรณ์
+// Toggle สถานะการใช้งานอุปกรณ์
+export const toggleEquipmentStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // ดึงสถานะปัจจุบัน
+    const equipment = await query(
+      'SELECT is_active FROM equipment WHERE equipment_id = ?',
+      [id]
+    );
+    
+    if (equipment.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'ไม่พบอุปกรณ์ที่ต้องการ'
+      });
+    }
+    
+    // สลับสถานะ
+    const newStatus = equipment[0].is_active === 1 ? 0 : 1;
+    
+    await query(
+      'UPDATE equipment SET is_active = ? WHERE equipment_id = ?',
+      [newStatus, id]
+    );
+    
+    // Log activity
+    await logActivity(
+      req.user.user_id, 
+      newStatus === 1 ? 'ACTIVATE_EQUIPMENT' : 'DEACTIVATE_EQUIPMENT', 
+      'equipment', 
+      id
+    );
+    
+    res.json({
+      success: true,
+      message: newStatus === 1 ? 'เปิดใช้งานอุปกรณ์สำเร็จ' : 'ปิดใช้งานอุปกรณ์สำเร็จ',
+      data: { is_active: newStatus }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'เกิดข้อผิดพลาดในการเปลี่ยนสถานะอุปกรณ์',
+      error: error.message
+    });
+  }
+};
+
+// ลบอุปกรณ์ (เก็บไว้กรณีต้องการลบจริงๆ - ใช้เฉพาะ admin)
 export const deleteEquipment = async (req, res) => {
   try {
     const { id } = req.params;

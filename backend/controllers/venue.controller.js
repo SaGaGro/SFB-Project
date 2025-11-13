@@ -6,6 +6,9 @@ export const getAllVenues = async (req, res) => {
   try {
     const { type, active } = req.query;
     
+    // ตรวจสอบว่าเป็น admin/manager หรือไม่
+    const isAdminOrManager = req.user && ['admin', 'manager'].includes(req.user.role);
+    
     let sql = `
       SELECT 
         v.*,
@@ -22,12 +25,18 @@ export const getAllVenues = async (req, res) => {
     
     const params = [];
     
+    // ถ้าไม่ใช่ admin/manager แสดงเฉพาะสนามที่ is_active = 1
+    if (!isAdminOrManager) {
+      sql += ' AND v.is_active = 1';
+    }
+    
     if (type) {
       sql += ' AND v.venue_type = ?';
       params.push(type);
     }
     
-    if (active !== undefined) {
+    // ถ้ามีการระบุ active parameter และเป็น admin/manager ให้ filter ตามที่ระบุ
+    if (active !== undefined && isAdminOrManager) {
       sql += ' AND v.is_active = ?';
       params.push(active === 'true' ? 1 : 0);
     }
@@ -62,7 +71,10 @@ export const getVenueById = async (req, res) => {
   try {
     const { id } = req.params;
     
-    const venues = await query(`
+    // ตรวจสอบว่าเป็น admin/manager หรือไม่
+    const isAdminOrManager = req.user && ['admin', 'manager'].includes(req.user.role);
+    
+    let sql = `
       SELECT 
         v.*,
         AVG(r.rating) as avg_rating,
@@ -70,8 +82,16 @@ export const getVenueById = async (req, res) => {
       FROM venues v
       LEFT JOIN reviews r ON v.venue_id = r.venue_id
       WHERE v.venue_id = ?
-      GROUP BY v.venue_id
-    `, [id]);
+    `;
+    
+    // ถ้าไม่ใช่ admin/manager แสดงเฉพาะสนามที่ is_active = 1
+    if (!isAdminOrManager) {
+      sql += ' AND v.is_active = 1';
+    }
+    
+    sql += ' GROUP BY v.venue_id';
+    
+    const venues = await query(sql, [id]);
     
     if (venues.length === 0) {
       return res.status(404).json({
@@ -93,10 +113,14 @@ export const getVenueById = async (req, res) => {
     );
     
     // ดึงอุปกรณ์
-    const equipment = await query(
-      'SELECT * FROM equipment WHERE venue_id = ?',
-      [id]
-    );
+    let equipmentSql = 'SELECT * FROM equipment WHERE venue_id = ?';
+    
+    // ถ้าไม่ใช่ admin/manager แสดงเฉพาะอุปกรณ์ที่ is_active = 1
+    if (!isAdminOrManager) {
+      equipmentSql += ' AND is_active = 1';
+    }
+    
+    const equipment = await query(equipmentSql, [id]);
 
     // ดึงรูปภาพของแต่ละอุปกรณ์
     for (let item of equipment) {
@@ -138,7 +162,8 @@ export const createVenue = async (req, res) => {
       description,
       opening_time,
       closing_time,
-      images = [] // 🆕 รับ array ของ image URLs
+      is_active = 1, // 🆕 เพิ่ม is_active (default = 1)
+      images = []
     } = req.body;
     
     if (!venue_name || !venue_type) {
@@ -151,14 +176,14 @@ export const createVenue = async (req, res) => {
     const result = await transaction(async (conn) => {
       // สร้างสนาม
       const [venueResult] = await conn.execute(
-        `INSERT INTO venues (venue_name, venue_type, location, description, opening_time, closing_time)
-         VALUES (?, ?, ?, ?, ?, ?)`,
-        [venue_name, venue_type, location, description, opening_time, closing_time]
+        `INSERT INTO venues (venue_name, venue_type, location, description, opening_time, closing_time, is_active)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [venue_name, venue_type, location, description, opening_time, closing_time, is_active]
       );
       
       const venueId = venueResult.insertId;
       
-      // 🆕 เพิ่มรูปภาพ (ถ้ามี)
+      // เพิ่มรูปภาพ (ถ้ามี)
       if (images.length > 0) {
         for (const imageUrl of images) {
           await conn.execute(
@@ -188,7 +213,7 @@ export const createVenue = async (req, res) => {
   }
 };
 
-// แก้ไขฟังก์ชัน updateVenue (บรรทัดที่ 142-209)
+// แก้ไขฟังก์ชัน updateVenue
 export const updateVenue = async (req, res) => {
   try {
     const { id } = req.params;
@@ -200,7 +225,7 @@ export const updateVenue = async (req, res) => {
       opening_time,
       closing_time,
       is_active,
-      images // 🆕 รับ array ของ image URLs
+      images
     } = req.body;
     
     const updateFields = [];
@@ -242,7 +267,7 @@ export const updateVenue = async (req, res) => {
       });
     }
     
-    // 🆕 อัพเดทรูปภาพถ้ามีการส่งมา
+    // อัพเดทรูปภาพถ้ามีการส่งมา
     if (images !== undefined) {
       await transaction(async (conn) => {
         // อัพเดทข้อมูลสนาม (ถ้ามี)
@@ -295,7 +320,55 @@ export const updateVenue = async (req, res) => {
   }
 };
 
-// ลบสนาม
+// Toggle สถานะการใช้งานสนาม
+export const toggleVenueStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // ดึงสถานะปัจจุบัน
+    const venues = await query(
+      'SELECT is_active FROM venues WHERE venue_id = ?',
+      [id]
+    );
+    
+    if (venues.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'ไม่พบสนามที่ต้องการ'
+      });
+    }
+    
+    // สลับสถานะ
+    const newStatus = venues[0].is_active === 1 ? 0 : 1;
+    
+    await query(
+      'UPDATE venues SET is_active = ? WHERE venue_id = ?',
+      [newStatus, id]
+    );
+    
+    // Log activity
+    await logActivity(
+      req.user.user_id, 
+      newStatus === 1 ? 'ACTIVATE_VENUE' : 'DEACTIVATE_VENUE', 
+      'venues', 
+      id
+    );
+    
+    res.json({
+      success: true,
+      message: newStatus === 1 ? 'เปิดใช้งานสนามสำเร็จ' : 'ปิดใช้งานสนามสำเร็จ',
+      data: { is_active: newStatus }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'เกิดข้อผิดพลาดในการเปลี่ยนสถานะสนาม',
+      error: error.message
+    });
+  }
+};
+
+// ลบสนาม (เก็บไว้สำหรับ admin เท่านั้น)
 export const deleteVenue = async (req, res) => {
   try {
     const { id } = req.params;

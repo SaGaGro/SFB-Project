@@ -4,24 +4,23 @@ import {
   getVenueById,
   createVenue,
   updateVenue,
+  toggleVenueStatus,
   deleteVenue
 } from '../controllers/venue.controller.js';
 import { authenticate, authorize } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Public routes
+// Public routes - ดูได้ทุกคน แต่เห็นเฉพาะ is_active = 1
 router.get('/', getAllVenues);
 router.get('/:id', getVenueById);
 
-// Protected routes
-// ❗️ เปลี่ยน: 'admin' เท่านั้นที่สร้างได้ (จากเดิม 'admin', 'manager')
-router.post('/', authenticate, authorize('admin'), createVenue);
-
-// ❗️ คงเดิม: 'admin' และ 'manager' ยังคงอัปเดตได้
+// Admin/Manager only
+router.post('/', authenticate, authorize('admin', 'manager'), createVenue);
 router.put('/:id', authenticate, authorize('admin', 'manager'), updateVenue);
+router.patch('/:id/toggle', authenticate, authorize('admin', 'manager'), toggleVenueStatus);
 
-// ❗️ เปลี่ยน: 'admin' เท่านั้นที่ลบได้ (จากเดิม 'admin', 'manager')
+// Admin only - Hard delete (ควรใช้เฉพาะกรณีจำเป็นจริงๆ)
 router.delete('/:id', authenticate, authorize('admin'), deleteVenue);
 
 export default router;
