@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import cookieParser from 'cookie-parser'; // 1. Import
+import cookieParser from 'cookie-parser';
 import { testConnection } from './config/database.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
 import { cancelExpiredPayments } from './controllers/payment.controller.js';
@@ -15,22 +15,39 @@ import equipmentRoutes from './routes/equipment.routes.js';
 import paymentRoutes from './routes/payment.routes.js';
 import notificationRoutes from './routes/notification.routes.js';
 import uploadRoutes from './routes/upload.routes.js';
-import omiseRoutes from './routes/omise.routes.js'; // เพิ่ม
+import omiseRoutes from './routes/omise.routes.js';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT;
 
-// 2. อัปเดต CORS
+// ✅ CORS Configuration สำหรับหลาย origins
+const allowedOrigins = [
+  'http://localhost:5173',           // Development
+  'http://localhost:3000',
+  'http://localhost:5174'           // Alternative dev port
+];
+
 app.use(cors({
-  origin: 'http://localhost:5173', // ❗️ (Frontend URL)
-  credentials: true
+  origin: function (origin, callback) {
+    // อนุญาต requests ที่ไม่มี origin (เช่น mobile apps, Postman)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser()); // 3. ใช้งาน cookie-parser
+app.use(cookieParser());
 app.use('/uploads', express.static('uploads'));
 
 app.get('/health', (req, res) => {
@@ -51,8 +68,8 @@ app.get('/api', (req, res) => {
       equipment: '/api/equipment',
       payments: '/api/payments',
       notifications: '/api/notifications',
-      omise: '/api/omise', // เพิ่ม
-      webhooks: '/api/webhooks', // เพิ่ม
+      omise: '/api/omise',
+      webhooks: '/api/webhooks',
     }
   });
 });
@@ -64,15 +81,15 @@ app.use('/api/courts', courtRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/equipment', equipmentRoutes);
 app.use('/api/payments', paymentRoutes);
-// app.use('/api/reviews', reviewRoutes); // ❌ ลบบรรทัดนี้
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/upload', uploadRoutes);
-app.use('/api/omise', omiseRoutes); // เพิ่ม
-app.use('/api/webhooks/omise', omiseRoutes); // เพิ่ม (สำหรับ webhook)
+app.use('/api/omise', omiseRoutes);
+app.use('/api/webhooks/omise', omiseRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
 
+// Cron job สำหรับยกเลิก payment ที่หมดอายุ
 setInterval(async () => {
   try {
     const cancelledCount = await cancelExpiredPayments();
