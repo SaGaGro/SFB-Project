@@ -13,7 +13,6 @@ import courtRoutes from './routes/court.routes.js';
 import bookingRoutes from './routes/booking.routes.js';
 import equipmentRoutes from './routes/equipment.routes.js';
 import paymentRoutes from './routes/payment.routes.js';
-import reviewRoutes from './routes/review.routes.js';
 import notificationRoutes from './routes/notification.routes.js';
 import uploadRoutes from './routes/upload.routes.js';
 import omiseRoutes from './routes/omise.routes.js'; // เพิ่ม
@@ -51,7 +50,6 @@ app.get('/api', (req, res) => {
       bookings: '/api/bookings',
       equipment: '/api/equipment',
       payments: '/api/payments',
-      reviews: '/api/reviews',
       notifications: '/api/notifications',
       omise: '/api/omise', // เพิ่ม
       webhooks: '/api/webhooks', // เพิ่ม
@@ -66,7 +64,7 @@ app.use('/api/courts', courtRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/equipment', equipmentRoutes);
 app.use('/api/payments', paymentRoutes);
-app.use('/api/reviews', reviewRoutes);
+// app.use('/api/reviews', reviewRoutes); // ❌ ลบบรรทัดนี้
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/omise', omiseRoutes); // เพิ่ม

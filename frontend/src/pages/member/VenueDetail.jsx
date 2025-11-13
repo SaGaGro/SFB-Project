@@ -5,7 +5,7 @@ import {
   Row,
   Col,
   Tag,
-  Rate,
+  Rate, // ⚠️ บรรทัดนี้อาจจะไม่จำเป็นแล้วถ้า Rate ไม่ได้ใช้ที่อื่น
   Button,
   Descriptions,
   Divider,
@@ -21,7 +21,7 @@ import {
   PhoneOutlined,
   MailOutlined,
   AppstoreOutlined,
-  StarFilled,
+  // StarFilled, // ❌ ลบ StarFilled
   CheckCircleFilled,
   LeftOutlined,
   RightOutlined,
@@ -195,6 +195,7 @@ const VenueDetail = () => {
                   </h1>
                 </div>
 
+                {/* ❌ บล็อกนี้ถูกลบออกทั้งหมด ❌
                 {venue.avg_rating && (
                   <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-yellow-50 to-amber-50 rounded-xl border border-yellow-200">
                     <div className="flex items-center gap-2">
@@ -215,6 +216,7 @@ const VenueDetail = () => {
                     </div>
                   </div>
                 )}
+                */}
 
                 <Descriptions
                   column={1}
