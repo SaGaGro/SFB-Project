@@ -55,6 +55,7 @@ const GuestVenueBrowser = () => {
     {
       key: 'badminton',
       name: 'แบดมินตัน',
+      icon: '🏸',
       gradient: 'from-orange-500 via-amber-500 to-yellow-500',
       bgGradient: 'from-orange-50 to-amber-50',
       cardGradient: 'linear-gradient(135deg, #f59e0b 0%, #f97316 100%)',
@@ -66,6 +67,7 @@ const GuestVenueBrowser = () => {
     {
       key: 'futsal',
       name: 'ฟุตซอล',
+      icon: '⚽',
       gradient: 'from-orange-500 via-amber-500 to-yellow-500',
       bgGradient: 'from-orange-50 to-amber-50',
       cardGradient: 'linear-gradient(135deg, #f59e0b 0%, #f97316 100%)',

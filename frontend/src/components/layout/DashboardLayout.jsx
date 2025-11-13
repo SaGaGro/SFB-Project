@@ -71,11 +71,11 @@ const DashboardLayout = () => {
         <div className="h-16 flex items-center justify-center border-b">
           {!collapsed ? (
             <div className="flex items-center space-x-2">
-              <span className="text-2xl">🏟️</span>
+              <span className="text-2xl"></span>
               <span className="text-lg font-bold">Sport Booking</span>
             </div>
           ) : (
-            <span className="text-2xl">🏟️</span>
+            <span className="text-2xl"></span>
           )}
         </div>
         <Menu

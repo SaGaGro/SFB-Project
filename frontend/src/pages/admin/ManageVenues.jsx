@@ -230,7 +230,6 @@ const ManageVenues = () => {
           />
         ) : (
           <div className="w-15 h-15 bg-gray-200 rounded-lg flex items-center justify-center">
-            <span className="text-2xl">🏟️</span>
           </div>
         ),
     },

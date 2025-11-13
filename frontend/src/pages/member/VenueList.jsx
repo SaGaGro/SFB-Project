@@ -55,7 +55,7 @@ const VenueList = () => {
   };
 
   const venueTypes = [
-    { value: 'all', label: 'ทั้งหมด', icon: '🏟️' },
+    { value: 'all', label: 'ทั้งหมด', icon: '' },
     { value: 'badminton', label: 'แบดมินตัน', icon: '🏸' },
     { value: 'futsal', label: 'ฟุตซอล', icon: '⚽' },
     { value: 'basketball', label: 'บาสเกตบอล', icon: '🏀' },
@@ -90,22 +90,22 @@ const VenueList = () => {
           {/* Stats Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
             <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-xl p-4 text-center border border-white border-opacity-30 hover:bg-opacity-30 transition-all">
-              <div className="text-3xl mb-2">🏟️</div>
+              <div className="text-3xl mb-6"></div>
               <p className="text-black text-2xl font-bold">{venueStats.total}</p>
               <p className="text-black text-sm opacity-90">สนามทั้งหมด</p>
             </div>
             <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-xl p-4 text-center border border-white border-opacity-30 hover:bg-opacity-30 transition-all">
-              <div className="text-3xl mb-2">🏸</div>
+              <div className="text-3xl mb-6"></div>
               <p className="text-black text-2xl font-bold">{venueStats.badminton}</p>
               <p className="text-black text-sm opacity-90">แบดมินตัน</p>
             </div>
             <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-xl p-4 text-center border border-white border-opacity-30 hover:bg-opacity-30 transition-all">
-              <div className="text-3xl mb-2">⚽</div>
+              <div className="text-3xl mb-6"></div>
               <p className="text-black text-2xl font-bold">{venueStats.futsal}</p>
               <p className="text-black text-sm opacity-90">ฟุตซอล</p>
             </div>
             <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-xl p-4 text-center border border-white border-opacity-30 hover:bg-opacity-30 transition-all">
-              <div className="text-3xl mb-2">🏀</div>
+              <div className="text-3xl mb-6"></div>
               <p className="text-black text-2xl font-bold">{venueStats.basketball}</p>
               <p className="text-black text-sm opacity-90">บาสเกตบอล</p>
             </div>
