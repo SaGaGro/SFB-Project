@@ -195,72 +195,72 @@ export const getMe = async (req, res) => {
 };
 
 // เปลี่ยนรหัสผ่าน
-export const changePassword = async (req, res) => {
-  // ... (โค้ดส่วน changePassword เหมือนเดิม) ...
-  try {
-    const { oldPassword, newPassword } = req.body;
-    const userId = req.user.user_id;
+// export const changePassword = async (req, res) => {
+//   // ... (โค้ดส่วน changePassword เหมือนเดิม) ...
+//   try {
+//     const { oldPassword, newPassword } = req.body;
+//     const userId = req.user.user_id;
 
-    if (!oldPassword || !newPassword) {
-      return res.status(400).json({
-        success: false,
-        message: 'กรุณากรอกข้อมูลให้ครบถ้วน'
-      });
-    }
+//     if (!oldPassword || !newPassword) {
+//       return res.status(400).json({
+//         success: false,
+//         message: 'กรุณากรอกข้อมูลให้ครบถ้วน'
+//       });
+//     }
 
-    // ดึงข้อมูล user
-    // --- MODIFIED ---: ตรวจสอบ is_active ด้วย
-    const users = await query(
-      'SELECT password_hash, is_active FROM users WHERE user_id = ?',
-      [userId]
-    );
+//     // ดึงข้อมูล user
+//     // --- MODIFIED ---: ตรวจสอบ is_active ด้วย
+//     const users = await query(
+//       'SELECT password_hash, is_active FROM users WHERE user_id = ?',
+//       [userId]
+//     );
 
-    if (users.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'ไม่พบข้อมูลผู้ใช้'
-      });
-    }
+//     if (users.length === 0) {
+//       return res.status(404).json({
+//         success: false,
+//         message: 'ไม่พบข้อมูลผู้ใช้'
+//       });
+//     }
     
-    // --- ADDED ---: ตรวจสอบสถานะ
-    if (users[0].is_active === 0) {
-      return res.status(403).json({
-        success: false,
-        message: 'บัญชีนี้ถูกปิดการใช้งาน'
-      });
-    }
+//     // --- ADDED ---: ตรวจสอบสถานะ
+//     if (users[0].is_active === 0) {
+//       return res.status(403).json({
+//         success: false,
+//         message: 'บัญชีนี้ถูกปิดการใช้งาน'
+//       });
+//     }
 
-    // ตรวจสอบรหัสผ่านเก่า
-    const isMatch = await bcrypt.compare(oldPassword, users[0].password_hash);
+//     // ตรวจสอบรหัสผ่านเก่า
+//     const isMatch = await bcrypt.compare(oldPassword, users[0].password_hash);
 
-    if (!isMatch) {
-      return res.status(400).json({
-        success: false,
-        message: 'รหัสผ่านเก่าไม่ถูกต้อง'
-      });
-    }
+//     if (!isMatch) {
+//       return res.status(400).json({
+//         success: false,
+//         message: 'รหัสผ่านเก่าไม่ถูกต้อง'
+//       });
+//     }
 
-    // Hash รหัสผ่านใหม่
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
+//     // Hash รหัสผ่านใหม่
+//     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-    // Update password
-    await query(
-      'UPDATE users SET password_hash = ? WHERE user_id = ?',
-      [hashedPassword, userId]
-    );
+//     // Update password
+//     await query(
+//       'UPDATE users SET password_hash = ? WHERE user_id = ?',
+//       [hashedPassword, userId]
+//     );
 
-    // Log activity
-    await logActivity(userId, 'CHANGE_PASSWORD', 'users', userId);
+//     // Log activity
+//     await logActivity(userId, 'CHANGE_PASSWORD', 'users', userId);
 
-    res.json({
-      success: true,
-      message: 'เปลี่ยนรหัสผ่านสำเร็จ'
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน',
-      error: error.message
-    });
-  }
-};
+//     res.json({
+//       success: true,
+//       message: 'เปลี่ยนรหัสผ่านสำเร็จ'
+//     });
+//   } catch (error) {
+//     res.status(500).json({
+//       success: false,
+//       message: 'เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน',
+//       error: error.message
+//     });
+//   }
+// };
