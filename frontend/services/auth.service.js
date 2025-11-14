@@ -23,11 +23,20 @@ const authService = {
     }
   },
 
-  logout: () => {
-    // localStorage.removeItem('token'); // ❗️ 2. ลบบรรทัดนี้
-    localStorage.removeItem('user');
-    // (แนะนำ: ควรเรียก API /auth/logout ที่ backend เพื่อ clear cookie ด้วย)
+  // 🔽 === แก้ไขส่วนนี้ === 🔽
+  logout: async () => {
+    try {
+      // 1. เรียก API logout เพื่อให้ backend เคลียร์ cookie
+      await api.post('/auth/logout');
+    } catch (error) {
+      // ไม่เป็นไรหาก error (เช่น token หมดอายุ) แค่ log ไว้
+      console.error('❌ Logout API call failed:', error);
+    } finally {
+      // 2. เคลียร์ localStorage ฝั่ง client เสมอ
+      localStorage.removeItem('user');
+    }
   },
+  // 🔼 === สิ้นสุดส่วนที่แก้ไข === 🔼
 
   getCurrentUser: () => {
     const userStr = localStorage.getItem('user');

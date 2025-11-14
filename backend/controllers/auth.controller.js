@@ -168,6 +168,32 @@ export const login = async (req, res) => {
   }
 };
 
+// 🔽 === เพิ่มฟังก์ชันนี้ === 🔽
+// ออกจากระบบ
+export const logout = (req, res) => {
+  try {
+    // เคลียร์ Cookie 'token' โดยการตั้งค่าให้หมดอายุทันที
+    res.cookie('token', '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      expires: new Date(0), // ตั้งเวลาหมดอายุในอดีต
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'ออกจากระบบสำเร็จ',
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'เกิดข้อผิดพลาดในการออกจากระบบ',
+      error: error.message,
+    });
+  }
+};
+// 🔼 === สิ้นสุดส่วนที่เพิ่ม === 🔼
+
 // ดึงข้อมูลตัวเอง
 export const getMe = async (req, res) => {
   // ... (โค้ดส่วน getMe เหมือนเดิม) ...

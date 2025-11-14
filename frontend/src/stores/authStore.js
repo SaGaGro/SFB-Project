@@ -44,10 +44,19 @@ const useAuthStore = create((set) => ({
     }
   },
 
-  logout: () => {
-    authService.logout();
-    set({ user: null, isAuthenticated: false });
+  // 🔽 === แก้ไขส่วนนี้ === 🔽
+  logout: async () => {
+    set({ loading: true }); // (Optional) แสดง loading
+    try {
+      await authService.logout(); // รอให้ service ทำงานเสร็จ
+    } catch (error) {
+      console.error('🔐 Logout failed in store:', error);
+    } finally {
+      // เคลียร์ state ใน store เสมอ
+      set({ user: null, isAuthenticated: false, loading: false });
+    }
   },
+  // 🔼 === สิ้นสุดส่วนที่แก้ไข === 🔼
 
   updateUser: (userData) => {
     const currentUser = authService.getCurrentUser();
