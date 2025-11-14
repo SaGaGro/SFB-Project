@@ -18,7 +18,8 @@ const AdminDashboard = () => {
     todayBookings: 0,
     pendingBookings: 0,
   });
-  const [recentBookings, setRecentBookings] = useState([]);
+  // [แก้ไข] เปลี่ยนชื่อ state เพื่อเก็บการจองทั้งหมด
+  const [allBookings, setAllBookings] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -53,7 +54,10 @@ const AdminDashboard = () => {
         pendingBookings: bookings.filter(b => b.status === 'pending').length,
       });
 
-      setRecentBookings(bookings.slice(0, 10));
+      // [แก้ไข] จัดเรียงข้อมูลทั้งหมด (เช่น ตาม ID ล่าสุด) และ set ข้อมูลทั้งหมด
+      const sortedBookings = bookings.sort((a, b) => b.booking_id - a.booking_id);
+      setAllBookings(sortedBookings);
+
     } catch (error) {
       message.error('ไม่สามารถโหลดข้อมูลได้');
     } finally {
@@ -74,6 +78,8 @@ const AdminDashboard = () => {
       dataIndex: 'booking_id',
       key: 'booking_id',
       width: 80,
+      // [เพิ่มเติม] เพิ่มการจัดเรียง
+      sorter: (a, b) => a.booking_id - b.booking_id,
     },
     {
       title: 'ผู้จอง',
@@ -90,21 +96,32 @@ const AdminDashboard = () => {
       dataIndex: 'booking_date',
       key: 'booking_date',
       render: (date) => new Date(date).toLocaleDateString('th-TH'),
+      // [เพิ่มเติม] เพิ่มการจัดเรียง
+      sorter: (a, b) => new Date(a.booking_date) - new Date(b.booking_date),
     },
     {
       title: 'ราคา',
       dataIndex: 'total_price',
       key: 'total_price',
       render: (price) => `${parseFloat(price).toLocaleString()} บาท`,
+      // [เพิ่มเติม] เพิ่มการจัดเรียง
+      sorter: (a, b) => a.total_price - b.total_price,
     },
     {
       title: 'สถานะ',
       dataIndex: 'status',
       key: 'status',
       render: (status) => {
-        const { color, text } = statusConfig[status] || {};
+        // [แก้ไข] เพิ่ม default case เผื่อมี status ที่ไม่รู้จัก
+        const { color, text } = statusConfig[status] || { color: 'gray', text: status };
         return <Tag color={color}>{text}</Tag>;
       },
+      // [แก้ไข] เพิ่ม filters และ onFilter
+      filters: Object.entries(statusConfig).map(([key, { text }]) => ({
+        text: text,
+        value: key,
+      })),
+      onFilter: (value, record) => record.status === value,
     },
   ];
 
@@ -186,13 +203,21 @@ const AdminDashboard = () => {
         </Col>
       </Row>
 
-      <Card title="การจองล่าสุด">
+      {/* [แก้ไข] เปลี่ยนชื่อ Card และ Table */}
+      <Card title="ข้อมูลการจองทั้งหมด">
         <Table
           columns={columns}
-          dataSource={recentBookings}
+          // [แก้ไข] เปลี่ยน dataSource
+          dataSource={allBookings}
           rowKey="booking_id"
           loading={loading}
-          pagination={false}
+          // [แก้ไข] เปิดใช้งาน pagination
+          pagination={{
+            pageSize: 10,
+            showSizeChanger: true,
+            pageSizeOptions: ['10', '20', '50'],
+            showTotal: (total, range) => `${range[0]}-${range[1]} จาก ${total} รายการ`,
+          }}
           scroll={{ x: 800 }}
         />
       </Card>

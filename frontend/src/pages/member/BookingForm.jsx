@@ -157,12 +157,16 @@ const BookingForm = () => {
     return hour * 60 + min;
   };
 
+  // [แก้ไข] อัปเดตฟังก์ชันนี้เพื่อตรวจสอบเวลาย้อนหลัง
   const generateTimeSlots = () => {
-    if (!venue) return [];
+    if (!venue || !selectedDate) return []; // [แก้ไข] เพิ่มการตรวจสอบ selectedDate
 
     const slots = [];
     const openTime = dayjs(venue.opening_time, "HH:mm");
     const closeTime = dayjs(venue.closing_time, "HH:mm");
+
+    const now = dayjs(); // [แก้ไข] ดึงเวลาปัจจุบัน
+    const isToday = selectedDate.isSame(now, "day"); // [แก้ไข] ตรวจสอบว่าเป็นวันนี้หรือไม่
 
     let current = openTime;
 
@@ -170,22 +174,25 @@ const BookingForm = () => {
       const currentTime = current.format("HH:mm");
       const currentMinutes = timeToMinutes(currentTime);
 
-      const isBooked = bookedSlots.some((slot) => {
-        const startMinutes = timeToMinutes(slot.start_time);
-        const endMinutes = timeToMinutes(slot.end_time);
-        return currentMinutes >= startMinutes && currentMinutes < endMinutes;
-      });
-
+      // ตรวจสอบการจอง (isBooked)
       const bookedSlot = bookedSlots.find((slot) => {
         const startMinutes = timeToMinutes(slot.start_time);
         const endMinutes = timeToMinutes(slot.end_time);
         return currentMinutes >= startMinutes && currentMinutes < endMinutes;
       });
+      const isBooked = !!bookedSlot;
+
+      // [แก้ไข] ตรวจสอบเวลาที่ผ่านมาแล้ว (isPast)
+      // 'current' คือ dayjs object ที่มีวันที่เป็น "วันนี้" และเวลาของ slot
+      // เราจะตรวจสอบว่า 'current' (เวลาของ slot) มาก่อน 'now' (เวลาปัจจุบัน) หรือไม่
+      // โดยจะตรวจสอบก็ต่อเมื่อวันที่เลือกคือ 'วันนี้' (isToday)
+      const isPast = isToday && current.isBefore(now);
 
       slots.push({
         time: currentTime,
         isBooked: isBooked,
         status: bookedSlot?.status || null,
+        isPast: isPast, // [แก้ไข] เพิ่ม property ใหม่
       });
 
       current = current.add(30, "minute");
@@ -518,47 +525,51 @@ const BookingForm = () => {
                         placeholder="เลือกเวลา"
                         onChange={setSelectedStartTime}
                       >
+                        {/* [แก้ไข] อัปเดต Logic การแสดงผลใน Dropdown */}
                         {generateTimeSlots().map((slot) => {
                           let backgroundColor = "white";
                           let textColor = "inherit";
+                          let tagText = null;
+                          let tagColor = "default";
+                          let isDisabled = false;
 
                           if (slot.isBooked) {
+                            isDisabled = true;
                             if (
                               slot.status === "paid" ||
                               slot.status === "confirmed"
                             ) {
-                              backgroundColor = "#ffe4e1";
+                              backgroundColor = "#ffe4e1"; // Red-ish
                               textColor = "#dc3545";
+                              tagText = "จองแล้ว";
+                              tagColor = "red";
                             } else if (slot.status === "pending") {
-                              backgroundColor = "#fff4e6";
+                              backgroundColor = "#fff4e6"; // Orange-ish
                               textColor = "#f59e0b";
+                              tagText = "รอชำระเงิน";
+                              tagColor = "orange";
                             }
+                          } else if (slot.isPast) {
+                            // Logic ใหม่สำหรับเวลาที่ผ่านมาแล้ว
+                            isDisabled = true;
+                            backgroundColor = "#f5f5f5"; // Light gray
+                            textColor = "#bfbfbf";
+                            tagText = "หมดเวลา";
+                            tagColor = "default";
                           }
 
                           return (
                             <Option
                               key={slot.time}
                               value={slot.time}
-                              disabled={slot.isBooked}
+                              disabled={isDisabled} // ใช้ isDisabled ที่เราคำนวณไว้
                               style={{ backgroundColor, color: textColor }}
                             >
                               <div className="flex justify-between items-center">
                                 <span>{slot.time} น.</span>
-                                {slot.isBooked && (
-                                  <Tag
-                                    color={
-                                      slot.status === "paid" ||
-                                      slot.status === "confirmed"
-                                        ? "red"
-                                        : "orange"
-                                    }
-                                    className="ml-2"
-                                  >
-                                    {slot.status === "paid"
-                                      ? "จองแล้ว"
-                                      : slot.status === "confirmed"
-                                      ? "ยืนยันแล้ว"
-                                      : "รอชำระเงิน"}
+                                {tagText && ( // แสดง Tag เมื่อมีข้อความ
+                                  <Tag color={tagColor} className="ml-2">
+                                    {tagText}
                                   </Tag>
                                 )}
                               </div>
