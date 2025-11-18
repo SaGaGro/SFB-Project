@@ -91,7 +91,7 @@
  * /api/notifications/{id}/read:
  *   put:
  *     tags: [Notifications]
- *     summary: ทำเครื่องหมายว่าอ่านแล้ว (Owner only)
+ *     summary: ทำเครื่องหมายว่าอ่านแล้ว (Member only)
  *     description: |
  *       **สิทธิ์การเข้าถึง:** 
  *       - ✅ เจ้าของการแจ้งเตือน (แก้ไขได้เฉพาะของตัวเอง)

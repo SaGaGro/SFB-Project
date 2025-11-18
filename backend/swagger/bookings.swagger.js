@@ -259,7 +259,7 @@
  * /api/bookings/{id}/cancel:
  *   put:
  *     tags: [Bookings]
- *     summary: ยกเลิกการจอง (Owner or Owner/Manager)
+ *     summary: ยกเลิกการจอง (Member or Owner/Manager)
  *     description: |
  *       **สิทธิ์การเข้าถึง:** 
  *       - ✅ Owner (ยกเลิกได้ทุกการจอง)

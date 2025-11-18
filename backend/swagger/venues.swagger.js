@@ -42,11 +42,11 @@
  *                     $ref: '#/components/schemas/Venue'
  *   post:
  *     tags: [Venues]
- *     summary: สร้างสนามใหม่ (Owner/Manager only)
+ *     summary: สร้างสนามใหม่ (Owner only)
  *     description: |
  *       **สิทธิ์การเข้าถึง:** 
  *       - ✅ Owner
- *       - ✅ Manager
+ *       - ❌ Manager
  *       - ❌ Member
  *     security:
  *       - bearerAuth: []

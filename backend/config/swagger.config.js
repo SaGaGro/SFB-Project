@@ -29,10 +29,10 @@ API Documentation ฉบับสมบูรณ์สำหรับระบ�
 3. ใส่ Token ใน Header: \`Authorization: Bearer YOUR_TOKEN\`
 
 ### การจองสนาม
-1. ค้นหาสนามที่ต้องการ \`GET /api/venues\`
-2. ดูตารางว่าง \`GET /api/bookings/availability\`
-3. สร้างการจอง \`POST /api/bookings\`
-4. ชำระเงิน \`POST /api/payments/create\`
+1. ค้นหาสนามที่ต้องการ
+2. ดูตารางว่าง
+3. สร้างการจอง
+4. ชำระเงิน
 
 ## 📋 สิทธิ์การเข้าถึง
 
