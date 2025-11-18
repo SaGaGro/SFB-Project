@@ -1,63 +1,63 @@
 import { query, transaction } from '../config/database.js';
 import { logActivity } from '../utils/logger.js';
 
-export const createPayment = async (req, res) => {
-  try {
-    const { booking_id, method = 'qr', qr_code } = req.body;
-    const user_id = req.user.user_id;
+// export const createPayment = async (req, res) => {
+//   try {
+//     const { booking_id, method = 'qr', qr_code } = req.body;
+//     const user_id = req.user.user_id;
     
-    const bookings = await query(
-      'SELECT * FROM bookings WHERE booking_id = ? AND user_id = ?',
-      [booking_id, user_id]
-    );
+//     const bookings = await query(
+//       'SELECT * FROM bookings WHERE booking_id = ? AND user_id = ?',
+//       [booking_id, user_id]
+//     );
     
-    if (bookings.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'ไม่พบการจองที่ต้องการ'
-      });
-    }
+//     if (bookings.length === 0) {
+//       return res.status(404).json({
+//         success: false,
+//         message: 'ไม่พบการจองที่ต้องการ'
+//       });
+//     }
     
-    const booking = bookings[0];
+//     const booking = bookings[0];
     
-    if (booking.status === 'paid') {
-      return res.status(400).json({
-        success: false,
-        message: 'การจองนี้ชำระเงินแล้ว'
-      });
-    }
+//     if (booking.status === 'paid') {
+//       return res.status(400).json({
+//         success: false,
+//         message: 'การจองนี้ชำระเงินแล้ว'
+//       });
+//     }
     
-    if (booking.status === 'cancelled') {
-      return res.status(400).json({
-        success: false,
-        message: 'ไม่สามารถชำระเงินสำหรับการจองที่ถูกยกเลิก'
-      });
-    }
+//     if (booking.status === 'cancelled') {
+//       return res.status(400).json({
+//         success: false,
+//         message: 'ไม่สามารถชำระเงินสำหรับการจองที่ถูกยกเลิก'
+//       });
+//     }
     
-    const result = await query(`
-      INSERT INTO payments (booking_id, user_id, amount, method, qr_code, status)
-      VALUES (?, ?, ?, ?, ?, 'pending')
-    `, [booking_id, user_id, booking.total_price, method, qr_code]);
+//     const result = await query(`
+//       INSERT INTO payments (booking_id, user_id, amount, method, qr_code, status)
+//       VALUES (?, ?, ?, ?, ?, 'pending')
+//     `, [booking_id, user_id, booking.total_price, method, qr_code]);
     
-    await logActivity(user_id, 'CREATE_PAYMENT', 'payments', result.insertId);
+//     await logActivity(user_id, 'CREATE_PAYMENT', 'payments', result.insertId);
     
-    res.status(201).json({
-      success: true,
-      message: 'สร้างการชำระเงินสำเร็จ',
-      data: {
-        paymentId: result.insertId,
-        amount: booking.total_price,
-        method
-      }
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'เกิดข้อผิดพลาดในการสร้างการชำระเงิน',
-      error: error.message
-    });
-  }
-};
+//     res.status(201).json({
+//       success: true,
+//       message: 'สร้างการชำระเงินสำเร็จ',
+//       data: {
+//         paymentId: result.insertId,
+//         amount: booking.total_price,
+//         method
+//       }
+//     });
+//   } catch (error) {
+//     res.status(500).json({
+//       success: false,
+//       message: 'เกิดข้อผิดพลาดในการสร้างการชำระเงิน',
+//       error: error.message
+//     });
+//   }
+// };
 
 export const confirmPayment = async (req, res) => {
   try {

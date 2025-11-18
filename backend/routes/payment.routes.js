@@ -1,6 +1,5 @@
 import express from 'express';
 import {
-  createPayment,
   confirmPayment,
   getPayments,
   getPaymentById,
@@ -11,7 +10,7 @@ import { authenticate, authorize } from '../middleware/auth.js';
 const router = express.Router();
 
 // Protected routes
-router.post('/', authenticate, createPayment);
+// router.post('/', authenticate, createPayment);
 router.get('/', authenticate, getPayments);
 router.get('/:id', authenticate, getPaymentById);
 

@@ -3,6 +3,8 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
+import swaggerUi from 'swagger-ui-express';
+import swaggerSpec from './config/swagger.config.js';
 import { testConnection } from './config/database.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
 import { cancelExpiredPayments } from './controllers/payment.controller.js';
@@ -69,6 +71,31 @@ app.use(cookieParser());
 app.use('/uploads', express.static('uploads'));
 
 // ==========================
+// 📚 Swagger Documentation
+// ==========================
+app.use(
+  '/api-docs',
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec, {
+    explorer: true,
+    customCss: '.swagger-ui .topbar { display: none }',
+    customSiteTitle: 'Sport Booking API Docs',
+    swaggerOptions: {
+      persistAuthorization: true,
+      docExpansion: 'none',
+      filter: true,
+      showRequestHeaders: true
+    }
+  })
+);
+
+// Swagger JSON endpoint
+app.get('/api-docs.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerSpec);
+});
+
+// ==========================
 // ✅ Health & API Info
 // ==========================
 app.get('/health', (req, res) => {
@@ -80,6 +107,10 @@ app.get('/api', (req, res) => {
     success: true,
     message: 'Sport Booking System API',
     version: '1.0.0',
+    documentation: {
+      swagger: '/api-docs',
+      json: '/api-docs.json'
+    },
     endpoints: {
       auth: '/api/auth',
       users: '/api/users',
@@ -89,6 +120,7 @@ app.get('/api', (req, res) => {
       equipment: '/api/equipment',
       payments: '/api/payments',
       notifications: '/api/notifications',
+      upload: '/api/upload',
       omise: '/api/omise',
       webhooks: '/api/webhooks/omise'
     }
@@ -137,6 +169,8 @@ testConnection().then(() => {
   app.listen(PORT, () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);
     console.log(`📚 API Documentation: http://localhost:${PORT}/api`);
+    console.log(`📖 Swagger UI: http://localhost:${PORT}/api-docs`);
+    console.log(`📄 Swagger JSON: http://localhost:${PORT}/api-docs.json`);
     console.log(`🔔 Webhook URL: ${process.env.OMISE_WEBHOOK_URL}`);
   });
 });
