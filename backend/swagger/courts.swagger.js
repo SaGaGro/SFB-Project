@@ -3,7 +3,10 @@
  * /api/courts:
  *   get:
  *     tags: [Courts]
- *     summary: ดึงรายการคอร์ททั้งหมด
+ *     summary: ดึงรายการคอร์ททั้งหมด (Public)
+ *     description: |
+ *       **สิทธิ์การเข้าถึง:** 
+ *       - ✅ Public (ไม่ต้อง login)
  *     parameters:
  *       - in: query
  *         name: venueId
@@ -35,6 +38,11 @@
  *   post:
  *     tags: [Courts]
  *     summary: สร้างคอร์ทใหม่ (Owner only)
+ *     description: |
+ *       **สิทธิ์การเข้าถึง:** 
+ *       - ✅ Owner
+ *       - ❌ Manager
+ *       - ❌ Member
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -73,7 +81,10 @@
  * /api/courts/available-slots:
  *   get:
  *     tags: [Courts]
- *     summary: ดึง Time Slots ที่ว่าง
+ *     summary: ดึง Time Slots ที่ว่าง (Public)
+ *     description: |
+ *       **สิทธิ์การเข้าถึง:** 
+ *       - ✅ Public (ไม่ต้อง login)
  *     parameters:
  *       - in: query
  *         name: courtId
@@ -123,7 +134,10 @@
  * /api/courts/{id}:
  *   get:
  *     tags: [Courts]
- *     summary: ดึงข้อมูลคอร์ทตาม ID
+ *     summary: ดึงข้อมูลคอร์ทตาม ID (Public)
+ *     description: |
+ *       **สิทธิ์การเข้าถึง:** 
+ *       - ✅ Public (ไม่ต้อง login)
  *     parameters:
  *       - in: path
  *         name: id
@@ -145,6 +159,11 @@
  *   put:
  *     tags: [Courts]
  *     summary: แก้ไขข้อมูลคอร์ท (Owner/Manager only)
+ *     description: |
+ *       **สิทธิ์การเข้าถึง:** 
+ *       - ✅ Owner
+ *       - ✅ Manager
+ *       - ❌ Member
  *     security:
  *       - bearerAuth: []
  *     parameters:

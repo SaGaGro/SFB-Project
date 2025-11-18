@@ -3,7 +3,12 @@
  * /api/notifications:
  *   get:
  *     tags: [Notifications]
- *     summary: ดึงรายการการแจ้งเตือนของผู้ใช้
+ *     summary: ดึงรายการการแจ้งเตือนของผู้ใช้ (All authenticated users)
+ *     description: |
+ *       **สิทธิ์การเข้าถึง:** 
+ *       - ✅ Owner (ดูได้เฉพาะการแจ้งเตือนของตัวเอง)
+ *       - ✅ Manager (ดูได้เฉพาะการแจ้งเตือนของตัวเอง)
+ *       - ✅ Member (ดูได้เฉพาะการแจ้งเตือนของตัวเอง)
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -48,6 +53,11 @@
  *   post:
  *     tags: [Notifications]
  *     summary: สร้างการแจ้งเตือน (Owner/Manager only)
+ *     description: |
+ *       **สิทธิ์การเข้าถึง:** 
+ *       - ✅ Owner
+ *       - ✅ Manager
+ *       - ❌ Member
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -81,7 +91,10 @@
  * /api/notifications/{id}/read:
  *   put:
  *     tags: [Notifications]
- *     summary: ทำเครื่องหมายว่าอ่านแล้ว
+ *     summary: ทำเครื่องหมายว่าอ่านแล้ว (Owner only)
+ *     description: |
+ *       **สิทธิ์การเข้าถึง:** 
+ *       - ✅ เจ้าของการแจ้งเตือน (แก้ไขได้เฉพาะของตัวเอง)
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -107,7 +120,10 @@
  * /api/notifications/read-all:
  *   put:
  *     tags: [Notifications]
- *     summary: อ่านทั้งหมด
+ *     summary: อ่านทั้งหมด (Member users)
+ *     description: |
+ *       **สิทธิ์การเข้าถึง:** 
+ *       - ✅ Member (อ่านการแจ้งเตือนของตัวเองทั้งหมด)
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -127,8 +143,12 @@
  * /api/notifications/{id}:
  *   delete:
  *     tags: [Notifications]
- *     summary: ลบการแจ้งเตือน (Soft Delete)
- *     description: ซ่อนการแจ้งเตือน (ไม่ลบจริง)
+ *     summary: ลบการแจ้งเตือน (Member only - Soft Delete)
+ *     description: |
+ *       ซ่อนการแจ้งเตือน (ไม่ลบจริง)
+ *       
+ *       **สิทธิ์การเข้าถึง:** 
+ *       - ✅ เจ้าของการแจ้งเตือน (ลบได้เฉพาะของตัวเอง)
  *     security:
  *       - bearerAuth: []
  *     parameters:

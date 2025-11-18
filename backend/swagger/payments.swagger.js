@@ -3,7 +3,12 @@
  * /api/payments:
  *   get:
  *     tags: [Payments]
- *     summary: ดึงรายการการชำระเงินทั้งหมด
+ *     summary: ดึงรายการการชำระเงินทั้งหมด (All authenticated users)
+ *     description: |
+ *       **สิทธิ์การเข้าถึง:** 
+ *       - ✅ Owner (ดูได้ทุกรายการ)
+ *       - ✅ Manager (ดูได้ทุกรายการ)
+ *       - ✅ Member (ดูได้เฉพาะรายการของตัวเอง)
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -33,81 +38,15 @@
  *                   type: array
  *                   items:
  *                     $ref: '#/components/schemas/Payment'
- *   post:
- *     tags: [Payments]
- *     summary: สร้างการชำระเงิน
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - booking_id
- *             properties:
- *               booking_id:
- *                 type: integer
- *                 example: 1
- *               method:
- *                 type: string
- *                 enum: [qr, omise]
- *                 default: qr
- *               qr_code:
- *                 type: string
- *                 description: URL ของ QR Code (ถ้าใช้ method=qr)
- *     responses:
- *       201:
- *         description: สร้างการชำระเงินสำเร็จ
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
- *                 data:
- *                   type: object
- *                   properties:
- *                     paymentId:
- *                       type: integer
- *                     amount:
- *                       type: number
- *                     method:
- *                       type: string
- *
- * /api/payments/{id}:
- *   get:
- *     tags: [Payments]
- *     summary: ดึงข้อมูลการชำระเงินตาม ID
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: สำเร็จ
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 data:
- *                   $ref: '#/components/schemas/Payment'
- *
  * /api/payments/{id}/confirm:
  *   put:
  *     tags: [Payments]
  *     summary: ยืนยันการชำระเงิน (Owner/Manager only)
+ *     description: |
+ *       **สิทธิ์การเข้าถึง:** 
+ *       - ✅ Owner
+ *       - ✅ Manager
+ *       - ❌ Member
  *     security:
  *       - bearerAuth: []
  *     parameters:

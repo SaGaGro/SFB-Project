@@ -3,7 +3,10 @@
  * /api/equipment:
  *   get:
  *     tags: [Equipment]
- *     summary: ดึงรายการอุปกรณ์ทั้งหมด
+ *     summary: ดึงรายการอุปกรณ์ทั้งหมด (Public)
+ *     description: |
+ *       **สิทธิ์การเข้าถึง:** 
+ *       - ✅ Public (ไม่ต้อง login)
  *     parameters:
  *       - in: query
  *         name: venueId
@@ -29,6 +32,11 @@
  *   post:
  *     tags: [Equipment]
  *     summary: สร้างอุปกรณ์ใหม่ (Owner/Manager only)
+ *     description: |
+ *       **สิทธิ์การเข้าถึง:** 
+ *       - ✅ Owner
+ *       - ✅ Manager
+ *       - ❌ Member
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -72,7 +80,10 @@
  * /api/equipment/{id}:
  *   get:
  *     tags: [Equipment]
- *     summary: ดึงข้อมูลอุปกรณ์ตาม ID
+ *     summary: ดึงข้อมูลอุปกรณ์ตาม ID (Public)
+ *     description: |
+ *       **สิทธิ์การเข้าถึง:** 
+ *       - ✅ Public (ไม่ต้อง login)
  *     parameters:
  *       - in: path
  *         name: id
@@ -94,6 +105,11 @@
  *   put:
  *     tags: [Equipment]
  *     summary: แก้ไขข้อมูลอุปกรณ์ (Owner/Manager only)
+ *     description: |
+ *       **สิทธิ์การเข้าถึง:** 
+ *       - ✅ Owner
+ *       - ✅ Manager
+ *       - ❌ Member
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -128,6 +144,11 @@
  *   patch:
  *     tags: [Equipment]
  *     summary: เปิด/ปิดการใช้งานอุปกรณ์ (Owner/Manager only)
+ *     description: |
+ *       **สิทธิ์การเข้าถึง:** 
+ *       - ✅ Owner
+ *       - ✅ Manager
+ *       - ❌ Member
  *     security:
  *       - bearerAuth: []
  *     parameters:

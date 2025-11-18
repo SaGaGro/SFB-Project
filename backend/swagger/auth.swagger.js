@@ -3,8 +3,12 @@
  * /api/auth/register:
  *   post:
  *     tags: [Authentication]
- *     summary: ลงทะเบียนผู้ใช้ใหม่
- *     description: สร้างบัญชีผู้ใช้ใหม่ในระบบ
+ *     summary: ลงทะเบียนผู้ใช้ใหม่ (Public)
+ *     description: |
+ *       สร้างบัญชีผู้ใช้ใหม่ในระบบ
+ *       
+ *       **สิทธิ์การเข้าถึง:** 
+ *       - ✅ Public (ไม่ต้อง login)
  *     requestBody:
  *       required: true
  *       content:
@@ -74,8 +78,12 @@
  * /api/auth/login:
  *   post:
  *     tags: [Authentication]
- *     summary: เข้าสู่ระบบ
- *     description: Login เข้าสู่ระบบด้วย email และ password
+ *     summary: เข้าสู่ระบบ (Public)
+ *     description: |
+ *       Login เข้าสู่ระบบด้วย email และ password
+ *       
+ *       **สิทธิ์การเข้าถึง:** 
+ *       - ✅ Public (ไม่ต้อง login)
  *     requestBody:
  *       required: true
  *       content:
@@ -137,8 +145,12 @@
  * /api/auth/logout:
  *   post:
  *     tags: [Authentication]
- *     summary: ออกจากระบบ
- *     description: ออกจากระบบและลบ cookie
+ *     summary: ออกจากระบบ (Public)
+ *     description: |
+ *       ออกจากระบบและลบ cookie
+ *       
+ *       **สิทธิ์การเข้าถึง:** 
+ *       - ✅ Public (ไม่ต้อง login)
  *     responses:
  *       200:
  *         description: ออกจากระบบสำเร็จ
@@ -157,8 +169,14 @@
  * /api/auth/me:
  *   get:
  *     tags: [Authentication]
- *     summary: ดึงข้อมูลผู้ใช้ปัจจุบัน
- *     description: ดึงข้อมูลของผู้ใช้ที่ login อยู่
+ *     summary: ดึงข้อมูลผู้ใช้ปัจจุบัน (All authenticated users)
+ *     description: |
+ *       ดึงข้อมูลของผู้ใช้ที่ login อยู่
+ *       
+ *       **สิทธิ์การเข้าถึง:** 
+ *       - ✅ Owner
+ *       - ✅ Manager
+ *       - ✅ Member
  *     security:
  *       - bearerAuth: []
  *       - cookieAuth: []

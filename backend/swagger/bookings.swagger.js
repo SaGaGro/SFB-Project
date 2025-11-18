@@ -3,7 +3,12 @@
  * /api/bookings:
  *   get:
  *     tags: [Bookings]
- *     summary: ดึงรายการการจองทั้งหมด
+ *     summary: ดึงรายการการจองทั้งหมด (All authenticated users)
+ *     description: |
+ *       **สิทธิ์การเข้าถึง:** 
+ *       - ✅ Owner (ดูได้ทุกการจอง)
+ *       - ✅ Manager (ดูได้ทุกการจอง)
+ *       - ✅ Member (ดูได้เฉพาะการจองของตัวเอง)
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -49,7 +54,12 @@
  *                     $ref: '#/components/schemas/Booking'
  *   post:
  *     tags: [Bookings]
- *     summary: สร้างการจองใหม่
+ *     summary: สร้างการจองใหม่ (All authenticated users)
+ *     description: |
+ *       **สิทธิ์การเข้าถึง:** 
+ *       - ✅ Owner
+ *       - ✅ Manager
+ *       - ✅ Member
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -116,7 +126,10 @@
  * /api/bookings/check-availability:
  *   get:
  *     tags: [Bookings]
- *     summary: ตรวจสอบความพร้อม
+ *     summary: ตรวจสอบความพร้อม (Public)
+ *     description: |
+ *       **สิทธิ์การเข้าถึง:** 
+ *       - ✅ Public (ไม่ต้อง login)
  *     parameters:
  *       - in: query
  *         name: courtId
@@ -160,7 +173,10 @@
  * /api/bookings/booked-slots:
  *   get:
  *     tags: [Bookings]
- *     summary: ดึงช่วงเวลาที่ถูกจองแล้ว
+ *     summary: ดึงช่วงเวลาที่ถูกจองแล้ว (Public)
+ *     description: |
+ *       **สิทธิ์การเข้าถึง:** 
+ *       - ✅ Public (ไม่ต้อง login)
  *     parameters:
  *       - in: query
  *         name: courtId
@@ -181,7 +197,12 @@
  * /api/bookings/{id}:
  *   get:
  *     tags: [Bookings]
- *     summary: ดึงข้อมูลการจองตาม ID
+ *     summary: ดึงข้อมูลการจองตาม ID (All authenticated users)
+ *     description: |
+ *       **สิทธิ์การเข้าถึง:** 
+ *       - ✅ Owner (ดูได้ทุกการจอง)
+ *       - ✅ Manager (ดูได้ทุกการจอง)
+ *       - ✅ Member (ดูได้เฉพาะการจองของตัวเอง)
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -205,6 +226,11 @@
  *   put:
  *     tags: [Bookings]
  *     summary: แก้ไขการจอง (Owner/Manager only)
+ *     description: |
+ *       **สิทธิ์การเข้าถึง:** 
+ *       - ✅ Owner
+ *       - ✅ Manager
+ *       - ❌ Member
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -233,7 +259,12 @@
  * /api/bookings/{id}/cancel:
  *   put:
  *     tags: [Bookings]
- *     summary: ยกเลิกการจอง
+ *     summary: ยกเลิกการจอง (Owner or Owner/Manager)
+ *     description: |
+ *       **สิทธิ์การเข้าถึง:** 
+ *       - ✅ Owner (ยกเลิกได้ทุกการจอง)
+ *       - ✅ Manager (ยกเลิกได้ทุกการจอง)
+ *       - ✅ Member (ยกเลิกได้เฉพาะการจองของตัวเอง)
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -259,6 +290,11 @@
  *   put:
  *     tags: [Bookings]
  *     summary: เปลี่ยนสถานะการจอง (Owner/Manager only)
+ *     description: |
+ *       **สิทธิ์การเข้าถึง:** 
+ *       - ✅ Owner
+ *       - ✅ Manager
+ *       - ❌ Member
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -286,7 +322,12 @@
  * /api/bookings/{id}/payment-status:
  *   get:
  *     tags: [Bookings]
- *     summary: ตรวจสอบสถานะการชำระเงิน
+ *     summary: ตรวจสอบสถานะการชำระเงิน (All authenticated users)
+ *     description: |
+ *       **สิทธิ์การเข้าถึง:** 
+ *       - ✅ Owner (ตรวจสอบได้ทุกการจอง)
+ *       - ✅ Manager (ตรวจสอบได้ทุกการจอง)
+ *       - ✅ Member (ตรวจสอบได้เฉพาะการจองของตัวเอง)
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -303,6 +344,11 @@
  *   post:
  *     tags: [Bookings]
  *     summary: ยืนยันการชำระเงินด้วยตนเอง (Owner/Manager only)
+ *     description: |
+ *       **สิทธิ์การเข้าถึง:** 
+ *       - ✅ Owner
+ *       - ✅ Manager
+ *       - ❌ Member
  *     security:
  *       - bearerAuth: []
  *     parameters:

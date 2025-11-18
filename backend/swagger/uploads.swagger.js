@@ -3,8 +3,14 @@
  * /api/upload/profile:
  *   post:
  *     tags: [Uploads]
- *     summary: อัปโหลดรูปโปรไฟล์
- *     description: อัปโหลดรูปโปรไฟล์และบันทึกลง database ทันที
+ *     summary: อัปโหลดรูปโปรไฟล์ (All authenticated users)
+ *     description: |
+ *       อัปโหลดรูปโปรไฟล์และบันทึกลง database ทันที
+ *       
+ *       **สิทธิ์การเข้าถึง:** 
+ *       - ✅ Owner
+ *       - ✅ Manager
+ *       - ✅ Member
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -19,7 +25,7 @@
  *               profile:
  *                 type: string
  *                 format: binary
- *                 description: ไฟล์รูปภาพ (jpg, jpeg, png, gif)
+ *                 description: ไฟล์รูปภาพ (jpg, jpeg, png, gif, webp - สูงสุด 5MB)
  *     responses:
  *       200:
  *         description: อัปโหลดสำเร็จ
@@ -47,7 +53,13 @@
  *   post:
  *     tags: [Uploads]
  *     summary: อัปโหลดรูปสนาม (Owner/Manager only)
- *     description: อัปโหลดรูปสนามได้หลายรูป (สูงสุด 10 รูป)
+ *     description: |
+ *       อัปโหลดรูปสนามได้หลายรูป (สูงสุด 10 รูป)
+ *       
+ *       **สิทธิ์การเข้าถึง:** 
+ *       - ✅ Owner
+ *       - ✅ Manager
+ *       - ❌ Member
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -65,6 +77,7 @@
  *                   type: string
  *                   format: binary
  *                 maxItems: 10
+ *                 description: รูปสนาม (สูงสุด 10 รูป, แต่ละรูปไม่เกิน 5MB)
  *               venueId:
  *                 type: integer
  *                 description: Venue ID (ถ้ามี จะบันทึกลง database)
@@ -101,7 +114,13 @@
  *   post:
  *     tags: [Uploads]
  *     summary: อัปโหลดรูปคอร์ท (Owner/Manager only)
- *     description: อัปโหลดรูปคอร์ทได้หลายรูป (สูงสุด 10 รูป)
+ *     description: |
+ *       อัปโหลดรูปคอร์ทได้หลายรูป (สูงสุด 10 รูป)
+ *       
+ *       **สิทธิ์การเข้าถึง:** 
+ *       - ✅ Owner
+ *       - ✅ Manager
+ *       - ❌ Member
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -119,6 +138,7 @@
  *                   type: string
  *                   format: binary
  *                 maxItems: 10
+ *                 description: รูปคอร์ท (สูงสุด 10 รูป, แต่ละรูปไม่เกิน 5MB)
  *               courtId:
  *                 type: integer
  *                 description: Court ID (ถ้ามี จะบันทึกลง database)
@@ -152,7 +172,13 @@
  *   post:
  *     tags: [Uploads]
  *     summary: อัปโหลดรูปอุปกรณ์ (Owner/Manager only)
- *     description: อัปโหลดรูปอุปกรณ์ได้หลายรูป (สูงสุด 10 รูป)
+ *     description: |
+ *       อัปโหลดรูปอุปกรณ์ได้หลายรูป (สูงสุด 10 รูป)
+ *       
+ *       **สิทธิ์การเข้าถึง:** 
+ *       - ✅ Owner
+ *       - ✅ Manager
+ *       - ❌ Member
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -171,6 +197,7 @@
  *                   type: string
  *                   format: binary
  *                 maxItems: 10
+ *                 description: รูปอุปกรณ์ (สูงสุด 10 รูป, แต่ละรูปไม่เกิน 5MB)
  *               equipmentId:
  *                 type: integer
  *                 description: Equipment ID (บังคับ)
@@ -183,10 +210,58 @@
  *       404:
  *         description: ไม่พบอุปกรณ์ที่ต้องการ
  *
+ * /api/upload:
+ *   post:
+ *     tags: [Uploads]
+ *     summary: อัปโหลดไฟล์ทั่วไป (All authenticated users)
+ *     description: |
+ *       อัปโหลดไฟล์ชั่วคราวก่อนสร้าง entity
+ *       
+ *       **สิทธิ์การเข้าถึง:** 
+ *       - ✅ Owner
+ *       - ✅ Manager
+ *       - ✅ Member
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - file
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *                 description: ไฟล์รูปภาพ (สูงสุด 5MB)
+ *     responses:
+ *       200:
+ *         description: อัปโหลดสำเร็จ
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 url:
+ *                   type: string
+ *                   example: /uploads/equipment/file123.jpg
+ *                 message:
+ *                   type: string
+ *                   example: อัปโหลดไฟล์สำเร็จ
+ *
  * /api/upload/{type}/{id}:
  *   delete:
  *     tags: [Uploads]
  *     summary: ลบรูปภาพ (Owner/Manager only)
+ *     description: |
+ *       **สิทธิ์การเข้าถึง:** 
+ *       - ✅ Owner
+ *       - ✅ Manager
+ *       - ❌ Member
  *     security:
  *       - bearerAuth: []
  *     parameters:

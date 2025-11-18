@@ -3,8 +3,14 @@
  * /api/omise/create-charge:
  *   post:
  *     tags: [Omise]
- *     summary: สร้าง Omise Charge (QR PromptPay)
- *     description: สร้าง QR Code สำหรับชำระเงินผ่าน PromptPay
+ *     summary: สร้าง Omise Charge (QR PromptPay) (Member only)
+ *     description: |
+ *       สร้าง QR Code สำหรับชำระเงินผ่าน PromptPay
+ *       
+ *       **สิทธิ์การเข้าถึง:** 
+ *       - ❌ Owner
+ *       - ❌ Manager
+ *       - ✅ Member (สำหรับการจองของตัวเอง)
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -70,8 +76,14 @@
  * /api/omise/charge/{charge_id}:
  *   get:
  *     tags: [Omise]
- *     summary: ตรวจสอบสถานะ Charge
- *     description: ตรวจสอบสถานะการชำระเงินจาก Omise
+ *     summary: ตรวจสอบสถานะ Charge (All authenticated users)
+ *     description: |
+ *       ตรวจสอบสถานะการชำระเงินจาก Omise
+ *       
+ *       **สิทธิ์การเข้าถึง:** 
+ *       - ✅ Owner (ตรวจสอบได้ทุกรายการ)
+ *       - ✅ Manager (ตรวจสอบได้ทุกรายการ)
+ *       - ✅ Member (ตรวจสอบได้เฉพาะรายการของตัวเอง)
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -125,8 +137,12 @@
  * /api/omise/webhook:
  *   post:
  *     tags: [Omise]
- *     summary: Webhook สำหรับ Omise
- *     description: รับ event จาก Omise เมื่อมีการชำระเงินสำเร็จหรือล้มเหลว (ไม่ต้อง authenticate)
+ *     summary: Webhook สำหรับ Omise (Public - No Auth)
+ *     description: |
+ *       รับ event จาก Omise เมื่อมีการชำระเงินสำเร็จหรือล้มเหลว
+ *       
+ *       **สิทธิ์การเข้าถึง:** 
+ *       - ✅ Public (ไม่ต้อง authenticate - ใช้สำหรับ Omise Webhook)
  *     requestBody:
  *       required: true
  *       content:

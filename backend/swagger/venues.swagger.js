@@ -3,7 +3,14 @@
  * /api/venues:
  *   get:
  *     tags: [Venues]
- *     summary: ดึงรายการสนามทั้งหมด
+ *     summary: ดึงรายการสนามทั้งหมด (Public)
+ *     description: |
+ *       ดึงรายการสนามทั้งหมด (Public เห็นเฉพาะ is_active = 1)
+ *       
+ *       **สิทธิ์การเข้าถึง:** 
+ *       - ✅ Public (ไม่ต้อง login)
+ *       - ✅ Owner (ดูได้ทั้ง active และ inactive)
+ *       - ✅ Manager (ดูได้ทั้ง active และ inactive)
  *     parameters:
  *       - in: query
  *         name: type
@@ -36,6 +43,11 @@
  *   post:
  *     tags: [Venues]
  *     summary: สร้างสนามใหม่ (Owner/Manager only)
+ *     description: |
+ *       **สิทธิ์การเข้าถึง:** 
+ *       - ✅ Owner
+ *       - ✅ Manager
+ *       - ❌ Member
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -97,7 +109,10 @@
  * /api/venues/{id}:
  *   get:
  *     tags: [Venues]
- *     summary: ดึงข้อมูลสนามตาม ID
+ *     summary: ดึงข้อมูลสนามตาม ID (Public)
+ *     description: |
+ *       **สิทธิ์การเข้าถึง:** 
+ *       - ✅ Public (ไม่ต้อง login)
  *     parameters:
  *       - in: path
  *         name: id
@@ -130,6 +145,11 @@
  *   put:
  *     tags: [Venues]
  *     summary: แก้ไขข้อมูลสนาม (Owner/Manager only)
+ *     description: |
+ *       **สิทธิ์การเข้าถึง:** 
+ *       - ✅ Owner
+ *       - ✅ Manager
+ *       - ❌ Member
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -167,10 +187,16 @@
  *     responses:
  *       200:
  *         description: แก้ไขสำเร็จ
+ * 
  * /api/venues/{id}/toggle:
  *   patch:
  *     tags: [Venues]
  *     summary: เปิด/ปิดการใช้งานสนาม (Owner/Manager only)
+ *     description: |
+ *       **สิทธิ์การเข้าถึง:** 
+ *       - ✅ Owner
+ *       - ✅ Manager
+ *       - ❌ Member
  *     security:
  *       - bearerAuth: []
  *     parameters:

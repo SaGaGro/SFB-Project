@@ -1,26 +1,14 @@
 /**
  * @swagger
  * /api/users/me:
- *   get:
- *     tags: [Users]
- *     summary: ดึงข้อมูลโปรไฟล์ของตัวเอง
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: สำเร็จ
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 data:
- *                   $ref: '#/components/schemas/User'
  *   put:
  *     tags: [Users]
- *     summary: แก้ไขโปรไฟล์ของตัวเอง
+ *     summary: แก้ไขโปรไฟล์ของตัวเอง (All authenticated users)
+ *     description: |
+ *       **สิทธิ์การเข้าถึง:** 
+ *       - ✅ Owner
+ *       - ✅ Manager  
+ *       - ✅ Member
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -40,7 +28,14 @@
  *         description: แก้ไขสำเร็จ
  *   delete:
  *     tags: [Users]
- *     summary: ลบบัญชีตัวเอง
+ *     summary: ลบบัญชีตัวเอง (All authenticated users)
+ *     description: |
+ *       **สิทธิ์การเข้าถึง:** 
+ *       - ✅ Owner
+ *       - ✅ Manager  
+ *       - ✅ Member
+ *       
+ *       **หมายเหตุ:** เป็นการ Soft Delete (ไม่ลบจริง แต่ปิดการใช้งาน)
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -51,6 +46,11 @@
  *   get:
  *     tags: [Users]
  *     summary: ดึงรายการผู้ใช้ทั้งหมด (Owner/Manager only)
+ *     description: |
+ *       **สิทธิ์การเข้าถึง:** 
+ *       - ✅ Owner (ดูได้ทุก role)
+ *       - ✅ Manager (ดูได้เฉพาะ Member)
+ *       - ❌ Member (ไม่สามารถเข้าถึง)
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -59,11 +59,13 @@
  *         schema:
  *           type: string
  *           enum: [admin, manager, member]
+ *         description: กรองตาม role (Owner only)
  *       - in: query
  *         name: is_active
  *         schema:
  *           type: integer
  *           enum: [0, 1]
+ *         description: กรองตามสถานะ
  *       - in: query
  *         name: search
  *         schema:
@@ -89,7 +91,14 @@
  * /api/users/{id}:
  *   get:
  *     tags: [Users]
- *     summary: ดึงข้อมูลผู้ใช้ตาม ID
+ *     summary: ดึงข้อมูลผู้ใช้ตาม ID (All authenticated users)
+ *     description: |
+ *       **สิทธิ์การเข้าถึง:** 
+ *       - ✅ Owner (ดูได้ทุกคน)
+ *       - ✅ Manager (ดูได้ทุกคน)
+ *       - ✅ Member (ดูได้ทุกคน)
+ *       
+ *       **หมายเหตุ:** แสดงข้อมูลพร้อมสถิติการจอง
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -112,7 +121,13 @@
  *                   $ref: '#/components/schemas/User'
  *   put:
  *     tags: [Users]
- *     summary: แก้ไขข้อมูลผู้ใช้
+ *     summary: แก้ไขข้อมูลผู้ใช้ (Owner of account or Owner)
+ *     description: |
+ *       **สิทธิ์การเข้าถึง:** 
+ *       - ✅ Owner (แก้ไขได้ทุกคน)
+ *       - ✅ เจ้าของบัญชี (แก้ไขได้เฉพาะตัวเอง)
+ *       - ❌ Manager (ไม่สามารถแก้ไขคนอื่น)
+ *       - ❌ Member (แก้ไขได้เฉพาะตัวเอง)
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -139,6 +154,13 @@
  *   delete:
  *     tags: [Users]
  *     summary: ลบผู้ใช้ (Owner/Manager only)
+ *     description: |
+ *       **สิทธิ์การเข้าถึง:** 
+ *       - ✅ Owner (ลบได้ทุกคน ยกเว้นตัวเอง)
+ *       - ✅ Manager (ลบได้เฉพาะ Member)
+ *       - ❌ Member (ไม่สามารถเข้าถึง)
+ *       
+ *       **หมายเหตุ:** เป็นการ Soft Delete (ไม่ลบจริง แต่ปิดการใช้งาน)
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -155,6 +177,11 @@
  *   put:
  *     tags: [Users]
  *     summary: เปลี่ยน role ผู้ใช้ (Owner only)
+ *     description: |
+ *       **สิทธิ์การเข้าถึง:** 
+ *       - ✅ Owner
+ *       - ❌ Manager
+ *       - ❌ Member
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -184,6 +211,11 @@
  *   put:
  *     tags: [Users]
  *     summary: รีเซ็ตรหัสผ่านผู้ใช้ (Owner/Manager only)
+ *     description: |
+ *       **สิทธิ์การเข้าถึง:** 
+ *       - ✅ Owner (รีเซ็ตได้ทุกคน)
+ *       - ✅ Manager (รีเซ็ตได้เฉพาะ Member)
+ *       - ❌ Member (ไม่สามารถเข้าถึง)
  *     security:
  *       - bearerAuth: []
  *     parameters:
