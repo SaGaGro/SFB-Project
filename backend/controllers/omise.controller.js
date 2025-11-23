@@ -155,19 +155,14 @@ export const checkChargeStatus = async (req, res) => {
 export const handleWebhook = async (req, res) => {
   try {
     const event = req.body;
-
     console.log('📥 Webhook received:', event.key);
 
-    // ตรวจสอบประเภท event
+    const charge = event.data;
+
     if (event.key === 'charge.complete') {
-      const charge = event.data;
-
-      console.log('💰 Charge completed:', charge.id);
-
-      // ตรวจสอบว่า charge สำเร็จหรือไม่
       if (charge.paid && charge.status === 'successful') {
+        // Payment สำเร็จ
         await transaction(async (conn) => {
-          // อัพเดทสถานะ payment
           await conn.execute(
             `UPDATE payments 
              SET status = 'paid', 
@@ -177,7 +172,6 @@ export const handleWebhook = async (req, res) => {
             [charge.id]
           );
 
-          // ดึงข้อมูล payment
           const [payments] = await conn.execute(
             'SELECT booking_id, user_id FROM payments WHERE omise_charge_id = ?',
             [charge.id]
@@ -186,19 +180,16 @@ export const handleWebhook = async (req, res) => {
           if (payments.length > 0) {
             const payment = payments[0];
 
-            // อัพเดทสถานะการจอง
             await conn.execute(
               'UPDATE bookings SET status = "paid" WHERE booking_id = ?',
               [payment.booking_id]
             );
 
-            // อัพเดทสถานะ court time slots
             await conn.execute(
               'UPDATE court_time_slots SET status = "booked" WHERE booking_id = ?',
               [payment.booking_id]
             );
 
-            // สร้างการแจ้งเตือน
             await conn.execute(
               `INSERT INTO notifications (user_id, title, message, type)
                VALUES (?, ?, ?, ?)`,
@@ -209,27 +200,50 @@ export const handleWebhook = async (req, res) => {
                 'payment',
               ]
             );
-
-            console.log('✅ Payment processed successfully for booking:', payment.booking_id);
           }
         });
       }
-    } else if (event.key === 'charge.failed') {
-      const charge = event.data;
+    } 
+    else if (event.key === 'charge.failed' || event.key === 'charge.expired') {
+      // Payment ล้มเหลวหรือหมดอายุ
+      await transaction(async (conn) => {
+        await conn.execute(
+          `UPDATE payments 
+           SET status = 'cancelled',
+               updated_at = NOW()
+           WHERE omise_charge_id = ?`,
+          [charge.id]
+        );
 
-      console.log('❌ Charge failed:', charge.id);
+        const [payments] = await conn.execute(
+          'SELECT booking_id, user_id FROM payments WHERE omise_charge_id = ?',
+          [charge.id]
+        );
 
-      // อัพเดทสถานะเป็น failed
-      await query(
-        `UPDATE payments 
-         SET status = 'failed', 
-             updated_at = NOW()
-         WHERE omise_charge_id = ?`,
-        [charge.id]
-      );
+        if (payments.length > 0) {
+          const payment = payments[0];
+
+          await conn.execute(
+            'UPDATE bookings SET status = "cancelled" WHERE booking_id = ?',
+            [payment.booking_id]
+          );
+
+          await conn.execute(
+            `INSERT INTO notifications (user_id, title, message, type)
+             VALUES (?, ?, ?, ?)`,
+            [
+              payment.user_id,
+              'ชำระเงินไม่สำเร็จ',
+              `การชำระเงินสำหรับการจอง #${payment.booking_id} ถูกยกเลิก`,
+              'payment',
+            ]
+          );
+        }
+      });
+
+      console.log(`❌ Payment cancelled for charge: ${charge.id}`);
     }
 
-    // ส่ง response กลับไปยัง Omise
     res.status(200).json({ received: true });
   } catch (error) {
     console.error('❌ Webhook error:', error);
